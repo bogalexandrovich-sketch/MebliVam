@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+
+/* --- Твій старий код (Базові налаштування) --- */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    color: #f1f5f9; /* slate-100 */
+
+    /* Твій фон з оверлеєм */
+    background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)),
+    url('../assets/images/fon.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-color: #0f172a; /* slate-900 */
+}
+
+.logo-container {
+    padding: 10px;
+    text-align: left;
+}
+
+.main-logo {
+    max-width: 250px;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+
+.main-logo:hover {
+    transform: scale(1.02);
+}
+
+h1, h2, h3 { color: #ffffff; }
+p { color: #cbd5e1; }
+
+/* --- Нові стилі (Скло та Навігація) --- */
+
+.dark-glass {
+    background: rgba(30, 41, 59, 0.7); /* slate-800 з прозорістю */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.nav-link {
+    position: relative;
+    transition: all 0.3s;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #f59e0b; /* amber-500 */
+    transition: width 0.3s;
+}
+
+.nav-link:hover::after,
+.active-link::after {
+    width: 100%;
+}
+
+/* Кнопка */
+.btn-detail {
+    width: 100%;
+    border: 1px solid #334155; /* slate-700 */
+    color: #cbd5e1; /* slate-300 */
+    padding: 1rem 0;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-detail:hover {
+    background-color: #d97706; /* amber-600 */
+    border-color: #d97706;
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
+}

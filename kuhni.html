@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кухні | MebliVam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden">
+<div class="bg-amber-600/10 border-b border-amber-500/20 py-2">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-[9px] md:text-[10px] text-amber-500/80 uppercase tracking-[0.3em] font-bold text-center italic">
+            <i class="fas fa-hammer mr-2 animate-pulse"></i>
+            Сайт у стадії розробки: щодня додаємо нові проєкти та фото до нашого каталогу
+        </p>
+    </div>
+</div>
+
+    <!-- НАВІГАЦІЯ -->
+    <nav class="dark-glass sticky top-0 z-50 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row justify-between items-center py-4 gap-6">
+                <a href="index.html" class="block shrink-0">
+    <img src="assets/images/logo-meblivam.png"
+         alt="MebliVam Logo"
+         class="h-20 md:h-24 w-auto object-contain hover:scale-[1.02] transition-transform duration-300 brightness-110
+                rounded-3xl shadow-2xl border border-white/10">
+</a>
+                <div id="main-nav" class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-[11px] md:text-[12px] uppercase tracking-[0.15em] font-bold text-slate-400">
+                    <a href="index.html" class="nav-link hover:text-white transition-colors">Про нас</a>
+                    <a href="kuhni.html" class="text-amber-500 border-b-2 border-amber-500/50">Кухні</a>
+                    <span class="hidden lg:block w-[1px] h-4 bg-slate-700 mx-2"></span>
+                    <a href="spalnya.html" class="nav-link hover:text-white">Спальні</a>
+                    <a href="peredpokii.html" class="nav-link hover:text-white">Передпокій</a>
+                    <a href="vitalni.html" class="nav-link hover:text-white">Вітальні</a>
+                    <a href="shafy.html" class="nav-link hover:text-white">Шафи</a>
+                    <a href="garderobni.html" class="nav-link hover:text-white">Гардеробні</a>
+                    <a href="dytyachi.html" class="nav-link hover:text-white">Дитячі</a>
+                    <a href="sanvuzol.html" class="nav-link hover:text-white">Сан. Вузли</a>
+                    <a href="contacts.html" class="nav-link hover:text-white">Контакти</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- КОНТЕНТ -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+
+        <div class="mb-16 border-l-4 border-amber-500 pl-6">
+            <span class="text-amber-500 font-bold tracking-[0.4em] uppercase text-[10px] mb-2 block italic">Каталог</span>
+            <h1 class="text-5xl md:text-7xl font-black text-white uppercase italic tracking-tighter">Кухні</h1>
+            <p class="text-slate-500 mt-4 max-w-2xl text-sm font-light leading-relaxed uppercase tracking-widest italic">
+                Від класики до хай-теку. Твоя ідеальна кухня починається тут.
+            </p>
+        </div>
+
+        <!-- СІТКА 3 на 30 -->
+        <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            <!-- ПРИКЛАД КАРТКИ (Ти можеш копіювати цей блок) -->
+            <!-- Щоб додати фото, просто пиши їх через кому в data-photos -->
+            <div class="group relative dark-glass rounded-3xl overflow-hidden shadow-2xl border border-white/5 cursor-pointer project-card"
+                 data-photos="assets/images/kuhni/01_01.jpg, assets/images/kuhni/01_02.jpg, assets/images/kuhni/01_03.jpg, assets/images/kuhni/01_04.jpg, assets/images/kuhni/01_05.jpg">
+
+                <!-- Ярличок кількості -->
+                <div class="absolute top-4 right-4 z-10 bg-amber-500/90 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-full shadow-xl italic">
+                    <i class="fas fa-camera mr-1"></i> <span class="photo-count">0</span>
+                </div>
+
+                <div class="aspect-[4/5] overflow-hidden">
+                    <img src="assets/images/kuhni/01_03.jpg" alt="Кухня" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                </div>
+
+                <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                    <span class="text-amber-500 text-[9px] uppercase tracking-[0.3em] font-bold">Проєкт #01</span>
+                    <h3 class="text-white text-xl font-black italic uppercase tracking-tighter">Сучасна кухня</h3>
+                    <p class="text-slate-400 text-[10px] uppercase mt-2 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500">МДФ / BLUM / Граніт / Акрил / Компакт плита / Декоративні акрилові рейки</p>
+                </div>
+            </div>
+
+            <!-- Тут я створюю пусті заготовки для твоїх наступних 89 карток.
+                 Просто заповнюй їх даними так само як першу. -->
+
+            <!-- Повтори цей блок потрібну кількість разів -->
+            <!-- [КАРТКИ 2-90] -->
+            <!-- Для прикладу додаю ще 2, щоб ти бачив сітку 3 в ряд -->
+
+            <div class="group relative dark-glass rounded-3xl overflow-hidden shadow-2xl border border-white/5 cursor-pointer project-card" data-photos="assets/images/kuhni/04_01.jpg, assets/images/kuhni/04_02.jpg, assets/images/kuhni/04_03.jpg, assets/images/kuhni/04_04.jpg, assets/images/kuhni/04_05.jpg, assets/images/kuhni/04_06.jpg, assets/images/kuhni/04_07.jpg, assets/images/kuhni/04_08.jpg, assets/images/kuhni/04_09.jpg, assets/images/kuhni/04_10.jpg, assets/images/kuhni/04_11.jpg, assets/images/kuhni/04_12.jpg, assets/images/kuhni/04_13.jpg">
+                <div class="absolute top-4 right-4 z-10 bg-amber-500/90 text-white text-[10px] font-black px-3 py-1 rounded-full italic"><i class="fas fa-camera mr-1"></i> <span class="photo-count">1</span></div>
+                <div class="aspect-[4/5] overflow-hidden"><img src="assets/images/kuhni/04_01.jpg" alt="Кухня" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-slate-950 to-transparent">
+                    <span class="text-amber-500 text-[9px] uppercase font-bold tracking-[0.3em]">Проєкт #02</span>
+                    <h3 class="text-white text-xl font-black italic uppercase">Велика кухня в приватний будинок</h3>
+                    <p class="text-slate-400 text-[10px] uppercase mt-2 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500">Вітрина з профілю R1 / BLUM / ДСП / Скло / Велика стільниця</p>
+                </div>
+            </div>
+
+            <div class="group relative dark-glass rounded-3xl overflow-hidden shadow-2xl border border-white/5 cursor-pointer project-card" data-photos="assets/images/kuhni/06_01.jpg, assets/images/kuhni/06_02.jpg, assets/images/kuhni/06_03.jpg, assets/images/kuhni/06_04.jpg, assets/images/kuhni/06_05.jpg, assets/images/kuhni/06_06.jpg, assets/images/kuhni/06_07.jpg, assets/images/kuhni/06_08.jpg">
+                <div class="absolute top-4 right-4 z-10 bg-amber-500/90 text-white text-[10px] font-black px-3 py-1 rounded-full italic"><i class="fas fa-camera mr-1"></i> <span class="photo-count">1</span></div>
+                <div class="aspect-[4/5] overflow-hidden"><img src="assets/images/kuhni/06_01.jpg" alt="Кухня" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-slate-950 to-transparent">
+                    <span class="text-amber-500 text-[9px] uppercase font-bold tracking-[0.3em]">Проєкт #03</span>
+                    <h3 class="text-white text-xl font-black italic uppercase">Кутова кухня</h3>
+                    <p class="text-slate-400 text-[10px] uppercase mt-2 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500">ДСП Egger / BLUM / Компакт плита / Gola профіль</p>
+                </div>
+            </div>
+
+            <div class="group relative dark-glass rounded-3xl overflow-hidden shadow-2xl border border-white/5 cursor-pointer project-card" data-photos="assets/images/kuhni/07_01.jpg, assets/images/kuhni/07_02.jpg, assets/images/kuhni/07_03.jpg, assets/images/kuhni/07_04.jpg, assets/images/kuhni/07_05.jpg, assets/images/kuhni/07_06.jpg, assets/images/kuhni/07_07.jpg, assets/images/kuhni/07_08.jpg, assets/images/kuhni/07_09.jpg">
+                <div class="absolute top-4 right-4 z-10 bg-amber-500/90 text-white text-[10px] font-black px-3 py-1 rounded-full italic"><i class="fas fa-camera mr-1"></i> <span class="photo-count">1</span></div>
+                <div class="aspect-[4/5] overflow-hidden"><img src="assets/images/kuhni/07_05.jpg" alt="Кухня" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-slate-950 to-transparent">
+                    <span class="text-amber-500 text-[9px] uppercase font-bold tracking-[0.3em]">Проєкт #04</span>
+                    <h3 class="text-white text-xl font-black italic uppercase">Кутова кухня фарбована в колір стін</h3>
+                    <p class="text-slate-400 text-[10px] uppercase mt-2 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500">МДФ Ral / BLUM / ДСП Egger / Gola профіль</p>
+                </div>
+            </div>
+
+            <div class="group relative dark-glass rounded-3xl overflow-hidden shadow-2xl border border-white/5 cursor-pointer project-card" data-photos="assets/images/kuhni/14_01.jpg,assets/images/kuhni/14_02.jpg, assets/images/kuhni/14_03.jpg, assets/images/kuhni/14_04.jpg, assets/images/kuhni/14_05.jpg, assets/images/kuhni/14_06.jpg, assets/images/kuhni/14_07.jpg, assets/images/kuhni/14_08.jpg, assets/images/kuhni/14_09.jpg, assets/images/kuhni/14_10.jpg, assets/images/kuhni/14_11.jpg, assets/images/kuhni/14_12.jpg">
+                <div class="absolute top-4 right-4 z-10 bg-amber-500/90 text-white text-[10px] font-black px-3 py-1 rounded-full italic"><i class="fas fa-camera mr-1"></i> <span class="photo-count">1</span></div>
+                <div class="aspect-[4/5] overflow-hidden"><img src="assets/images/kuhni/14_01.jpg" alt="Кухня" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"></div>
+                <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-slate-950 to-transparent">
+                    <span class="text-amber-500 text-[9px] uppercase font-bold tracking-[0.3em]">Проєкт #02</span>
+                    <h3 class="text-white text-xl font-black italic uppercase">Велика кухня в приватний будинок</h3>
+                    <p class="text-slate-400 text-[10px] uppercase mt-2 tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-500">Вітрина з профілю R1 / BLUM / ДСП / Скло / Велика стільниця</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- МОДАЛЬНЕ ВІКНО ГАЛЕРЕЇ (Обов'язково для JS) -->
+    <div id="gallery-overlay" class="fixed inset-0 z-[100] bg-slate-950/98 backdrop-blur-2xl hidden flex items-center justify-center">
+        <button id="close-gallery" class="absolute top-6 right-6 text-white text-3xl opacity-30 hover:opacity-100 transition-all"><i class="fas fa-times"></i></button>
+        <button id="prev-photo" class="absolute left-4 md:left-10 text-white text-4xl opacity-20 hover:opacity-100 transition-all"><i class="fas fa-chevron-left"></i></button>
+        <div class="max-w-[90vw] max-h-[85vh] flex items-center justify-center">
+            <img id="gallery-img" src="" alt="View" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border border-white/10">
+        </div>
+        <button id="next-photo" class="absolute right-4 md:right-10 text-white text-4xl opacity-20 hover:opacity-100 transition-all"><i class="fas fa-chevron-right"></i></button>
+        <div id="gallery-index" class="absolute bottom-10 text-slate-500 text-[10px] uppercase tracking-[0.5em] font-black italic">1 / 1</div>
+    </div>
+
+    <footer class="p-10 text-center text-slate-600 text-[10px] uppercase tracking-[0.4em] opacity-50">
+        &copy; 2026 MebliVam
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
