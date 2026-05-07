@@ -89,3 +89,13 @@ p { color: #cbd5e1; }
     color: #ffffff;
     box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
 }
+/* Блокуємо системне меню та виділення на картинках */
+img {
+    -webkit-touch-callout: none;    /* iOS Safari */
+    -webkit-user-select: none;      /* Safari */
+    -khtml-user-select: none;       /* Konqueror HTML */
+    -moz-user-select: none;          /* Firefox */
+    -ms-user-select: none;           /* Internet Explorer/Edge */
+    user-select: none;               /* Chrome, Edge, Opera and Firefox */
+    -webkit-tap-highlight-color: transparent; /* Прибираємо підсвітку при натисканні */
+}

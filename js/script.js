@@ -132,3 +132,10 @@ document.addEventListener('dragstart', (e) => {
         e.preventDefault();
     }
 });
+document.querySelectorAll('img').forEach(img => {
+    // Блокуємо контекстне меню (права кнопка і довгий натиск)
+    img.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Додатковий захист від перетягування (щоб не перетягнули в іншу вкладку)
+    img.addEventListener('dragstart', e => e.preventDefault());
+});
