@@ -121,3 +121,14 @@ function updateGallery() {
         indexDisplay.innerText = `${currentIndex + 1} / ${currentPhotos.length}`;
     }
 }
+// Заборона контекстного меню (правої кнопки миші) на всьому сайті
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
+
+// Заборона перетягування зображень (drag-and-drop)
+document.addEventListener('dragstart', (e) => {
+    if (e.target.nodeName === 'IMG') {
+        e.preventDefault();
+    }
+});
