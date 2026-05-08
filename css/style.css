@@ -1,26 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 
-/* --- Твій старий код (Базові налаштування) --- */
-
+/* --- Базові налаштування --- */
 body {
     margin: 0;
     padding: 0;
     font-family: 'Inter', sans-serif;
-    color: #f1f5f9; /* slate-100 */
-
-    /* Твій фон з оверлеєм */
+    color: #f1f5f9;
     background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)),
     url('../assets/images/fon.jpeg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
     background-repeat: no-repeat;
-    background-color: #0f172a; /* slate-900 */
-}
-
-.logo-container {
-    padding: 10px;
-    text-align: left;
+    background-color: #0f172a;
 }
 
 .main-logo {
@@ -38,10 +30,9 @@ body {
 h1, h2, h3 { color: #ffffff; }
 p { color: #cbd5e1; }
 
-/* --- Нові стилі (Скло та Навігація) --- */
-
+/* --- Ефект скла та Навігація --- */
 .dark-glass {
-    background: rgba(30, 41, 59, 0.7); /* slate-800 з прозорістю */
+    background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -60,64 +51,51 @@ p { color: #cbd5e1; }
     left: 0;
     width: 0;
     height: 2px;
-    background-color: #f59e0b; /* amber-500 */
+    background-color: #f59e0b;
     transition: width 0.3s;
 }
 
-.nav-link:hover::after,
-.active-link::after {
+.nav-link:hover::after {
     width: 100%;
 }
 
-/* Кнопка */
-.btn-detail {
-    width: 100%;
-    border: 1px solid #334155; /* slate-700 */
-    color: #cbd5e1; /* slate-300 */
-    padding: 1rem 0;
-    border-radius: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-size: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-detail:hover {
-    background-color: #d97706; /* amber-600 */
-    border-color: #d97706;
-    color: #ffffff;
-    box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
-}
-/* Блокуємо системне меню та виділення на картинках */
+/* --- Захист контенту --- */
 img {
-    -webkit-touch-callout: none;    /* iOS Safari */
-    -webkit-user-select: none;      /* Safari */
-    -khtml-user-select: none;       /* Konqueror HTML */
-    -moz-user-select: none;          /* Firefox */
-    -ms-user-select: none;           /* Internet Explorer/Edge */
-    user-select: none;               /* Chrome, Edge, Opera and Firefox */
-    -webkit-tap-highlight-color: transparent; /* Прибираємо підсвітку при натисканні */
-}
-/* Стилі для горизонтального слайдера (свайп) */
-.hide-scrollbar::-webkit-scrollbar {
-    display: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+/* --- Галерея: Анімації --- */
+
+/* Ефект зникнення (вихід) - спрацьовує на старе фото */
+.photo-exit {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.2s ease-in, transform 0.2s ease-in;
 }
 
-.snap-x {
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; /* для плавності на iPhone */
+/* Ефект появи (вхід) - спрацьовує на нове фото */
+.photo-enter {
+    animation: photoEnter 0.4s ease-out forwards;
 }
 
-.snap-center {
-    scroll-snap-align: center;
+@keyframes photoEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
+
+/* --- Додаткові утиліти для скролу (якщо потрібні) --- */
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .snap-x { scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
