@@ -139,3 +139,94 @@ document.querySelectorAll('img').forEach(img => {
     // Додатковий захист від перетягування (щоб не перетягнули в іншу вкладку)
     img.addEventListener('dragstart', e => e.preventDefault());
 });
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.project-card');
+    const overlay = document.getElementById('gallery-overlay');
+    const galleryImg = document.getElementById('gallery-img');
+    const galleryIndex = document.getElementById('gallery-index');
+    const closeBtn = document.getElementById('close-gallery');
+    const prevBtn = document.getElementById('prev-photo');
+    const nextBtn = document.getElementById('next-photo');
+
+    let currentPhotos = [];
+    let currentIndex = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    // 1. Автоматичне оновлення лічильників фото на картках
+    cards.forEach(card => {
+        const photos = card.dataset.photos.split(',').map(p => p.trim());
+        const countSpan = card.querySelector('.photo-count');
+        if (countSpan) countSpan.textContent = photos.length;
+
+        card.addEventListener('click', () => {
+            currentPhotos = photos;
+            currentIndex = 0;
+            showPhoto(currentIndex);
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // 2. Функція відображення фото
+    function showPhoto(index) {
+        galleryImg.src = currentPhotos[index];
+        galleryIndex.textContent = `${index + 1} / ${currentPhotos.length}`;
+    }
+
+    // 3. Навігація
+    const nextPhoto = () => {
+        currentIndex = (currentIndex + 1) % currentPhotos.length;
+        showPhoto(currentIndex);
+    };
+
+    const prevPhoto = () => {
+        currentIndex = (currentIndex - 1 + currentPhotos.length) % currentPhotos.length;
+        showPhoto(currentIndex);
+    };
+
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); nextPhoto(); });
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); prevPhoto(); });
+
+    // 4. ЛОГІКА СВАЙПІВ
+    overlay.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    overlay.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        const swipeThreshold = 50; // мінімальна відстань для свайпа
+        if (touchStartX - touchEndX > swipeThreshold) {
+            nextPhoto(); // свайп вліво — наступне
+        }
+        if (touchEndX - touchStartX > swipeThreshold) {
+            prevPhoto(); // свайп вправо — попереднє
+        }
+    }
+
+    // 5. Закриття
+    const closeGallery = () => {
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    };
+
+    closeBtn.addEventListener('click', closeGallery);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target.closest('.max-w-full')) {
+            // закриваємо тільки якщо клікнули на фон, а не на кнопки
+            if (e.target === overlay) closeGallery();
+        }
+    });
+
+    // Кнопки клавіатури
+    document.addEventListener('keydown', (e) => {
+        if (overlay.classList.contains('hidden')) return;
+        if (e.key === 'Escape') closeGallery();
+        if (e.key === 'ArrowRight') nextPhoto();
+        if (e.key === 'ArrowLeft') prevPhoto();
+    });
+});

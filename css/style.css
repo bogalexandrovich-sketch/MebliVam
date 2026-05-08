@@ -99,3 +99,26 @@ img {
     user-select: none;               /* Chrome, Edge, Opera and Firefox */
     -webkit-tap-highlight-color: transparent; /* Прибираємо підсвітку при натисканні */
 }
+/* Стилі для горизонтального слайдера (свайп) */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.snap-x {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* для плавності на iPhone */
+}
+
+.snap-center {
+    scroll-snap-align: center;
+}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.snap-x { scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+.snap-center { scroll-snap-align: center; }
