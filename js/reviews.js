@@ -129,3 +129,17 @@ onSnapshot(q, (snapshot) => {
             </div>`;
     });
 });
+window.login = () => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // Для смартфонів — перенаправлення
+        signInWithRedirect(auth, provider);
+    } else {
+        // Для ПК — звичне вікно
+        signInWithPopup(auth, provider).catch(() => {
+            // Якщо вікно заблоковано браузером — теж робимо редирект
+            signInWithRedirect(auth, provider);
+        });
+    }
+};
