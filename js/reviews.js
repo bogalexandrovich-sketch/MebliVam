@@ -20,16 +20,27 @@ const firebaseConfig = {
     appId: "1:565017405232:web:2f865f979720b0805164f9"
 };
 
+// Ініціалізація
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Фіксуємо сесію в локальному сховищі браузера
-setPersistence(auth, browserLocalPersistence);
+// Фіксуємо сесію, щоб не «вилітало»
+setPersistence(auth, browserLocalPersistence)
+.then(() => {
+    console.log("Persistence set to local");
+})
+.catch((error) => console.error("Persistence error:", error));
 
 // Обробка повернення з Google після редиректу
-getRedirectResult(auth).catch((error) => console.error("Auth error:", error));
+getRedirectResult(auth)
+.then((result) => {
+    if (result?.user) {
+        console.log("Вхід успішний:", result.user.displayName);
+    }
+})
+.catch((error) => console.error("Auth error:", error));
 
 // Основна логіка відстеження користувача
 onAuthStateChanged(auth, (user) => {
@@ -39,7 +50,7 @@ onAuthStateChanged(auth, (user) => {
     if (!authSec) return;
 
     if (user) {
-        // Якщо залогінений — показуємо профіль і форму
+        // Якщо залогінений
         authSec.innerHTML = `
         <div class="flex items-center gap-4 bg-white/5 p-2 rounded-full border border-white/10 shadow-xl">
         <img src="${user.photoURL}" class="w-10 h-10 rounded-full border-2 border-amber-500">
@@ -56,7 +67,7 @@ onAuthStateChanged(auth, (user) => {
 
         document.getElementById('logout-btn')?.addEventListener('click', () => signOut(auth));
     } else {
-        // Якщо не залогінений — показуємо тільки кнопку входу
+        // Якщо не залогінений
         authSec.innerHTML = `
         <button id="login-btn" class="px-10 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl active:scale-95 transition-all">
         Увійти через Google
