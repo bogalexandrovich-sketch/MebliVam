@@ -1,32 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-    getAuth,
-    signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
-    GoogleAuthProvider,
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-    getFirestore,
-    collection,
-    addDoc,
-    serverTimestamp,
-    onSnapshot,
-    query,
-    orderBy,
-    deleteDoc,
-    doc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyB-ТВІЙ-КЛЮЧ",
+    apiKey: "AIzaSyB6cfj0rKRz2B_MgPrELJe8sFav942TrF0",
     authDomain: "meblivam-pp-ua.firebaseapp.com",
     projectId: "meblivam-pp-ua",
     storageBucket: "meblivam-pp-ua.appspot.com",
     messagingSenderId: "565017405232",
-    appId: "1:565017405232:web:xxxx"
+    appId: "1:565017405232:web:2f865f979720b0805164f9"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -34,12 +16,12 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-const reviewsContainer = document.getElementById('reviews-container');
-const authSection = document.getElementById('auth-section');
-const reviewFormSection = document.getElementById('review-form-section');
+const authSec = document.getElementById('auth-section');
+const formSec = document.getElementById('review-form-section');
+const container = document.getElementById('reviews-container');
 
-// Обробка редиректу для мобілок
-getRedirectResult(auth).catch((err) => console.error("Помилка редиректу:", err));
+// Обробка для мобілок (Redirect)
+getRedirectResult(auth).catch(err => console.error("Auth Error:", err));
 
 window.login = () => {
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -53,62 +35,54 @@ window.login = () => {
 window.logout = () => signOut(auth);
 
 onAuthStateChanged(auth, (user) => {
-    if (!authSection) return;
+    if (!authSec) return;
     if (user) {
-        authSection.innerHTML = `
-        <div class="flex items-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10">
+        authSec.innerHTML = `
+        <div class="flex items-center gap-4 bg-white/5 p-2 pr-6 rounded-full border border-white/10 shadow-xl">
         <img src="${user.photoURL}" class="w-10 h-10 rounded-full border-2 border-amber-500">
         <div class="text-left">
-        <span class="block text-white text-[10px] font-black uppercase tracking-widest">${user.displayName}</span>
-        <button onclick="logout()" class="text-[9px] text-amber-500 hover:text-white transition-colors uppercase font-bold">Вийти</button>
+        <p class="text-white text-[10px] font-bold uppercase tracking-widest">${user.displayName}</p>
+        <button onclick="logout()" class="text-amber-500 text-[9px] uppercase font-black hover:text-white transition-colors">Вийти</button>
         </div>
         </div>`;
-        if (reviewFormSection) reviewFormSection.classList.remove('hidden');
+        formSec?.classList.remove('hidden');
     } else {
-        authSection.innerHTML = `
-        <button onclick="login()" class="bg-amber-600 hover:bg-amber-500 text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-2xl">
+        authSec.innerHTML = `
+        <button onclick="login()" class="px-10 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl active:scale-95 transition-all">
         Увійти через Google
         </button>`;
-        if (reviewFormSection) reviewFormSection.classList.add('hidden');
+        formSec?.classList.add('hidden');
     }
 });
 
-if (reviewsContainer) {
+if (container) {
     document.getElementById('review-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const textInput = document.getElementById('review-text');
-        if (!textInput.value.trim() || !auth.currentUser) return;
+        const msg = document.getElementById('review-text').value;
+        if (!msg.trim() || !auth.currentUser) return;
         try {
             await addDoc(collection(db, "reviews"), {
                 name: auth.currentUser.displayName,
                 photo: auth.currentUser.photoURL,
-                email: auth.currentUser.email,
-                text: textInput.value,
+                text: msg,
                 timestamp: serverTimestamp()
             });
-            textInput.value = "";
-        } catch (err) { console.error(err); }
+            document.getElementById('review-text').value = "";
+        } catch (err) { console.error("Firestore Error:", err); }
     });
 
-    const q = query(collection(db, "reviews"), orderBy("timestamp", "desc"));
-    onSnapshot(q, (snapshot) => {
-        reviewsContainer.innerHTML = '';
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const isAdmin = auth.currentUser && auth.currentUser.email === "alphacentavr.2012@gmail.com";
-            reviewsContainer.innerHTML += `
-            <div class="bg-white/5 border border-white/10 p-6 rounded-[2rem] relative mb-6">
+    onSnapshot(query(collection(db, "reviews"), orderBy("timestamp", "desc")), (snap) => {
+        container.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            container.innerHTML += `
+            <div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-6 animate-fade-in shadow-lg">
             <div class="flex items-center gap-4 mb-4">
-            <img src="${data.photo}" class="w-10 h-10 rounded-xl border border-amber-500/20">
-            <div>
-            <h4 class="text-white font-bold uppercase tracking-widest text-[10px]">${data.name}</h4>
-            <p class="text-[8px] text-amber-500/50 uppercase font-bold">${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString() : 'щойно'}</p>
+            <img src="${d.photo}" class="w-10 h-10 rounded-xl border border-amber-500/20 shadow-md">
+            <h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest">${d.name}</h4>
             </div>
-            </div>
-            <p class="text-slate-300 text-sm italic">"${data.text}"</p>
-            ${isAdmin ? `<button onclick="deleteReview('${doc.id}')" class="absolute top-4 right-4 text-red-500/30 hover:text-red-500"><i class="fas fa-trash-can text-xs"></i></button>` : ''}
+            <p class="text-sm italic text-slate-300 leading-relaxed font-light">"${d.text}"</p>
             </div>`;
         });
     });
 }
-window.deleteReview = async (id) => { if (confirm('Видалити?')) await deleteDoc(doc(db, "reviews", id)); };
