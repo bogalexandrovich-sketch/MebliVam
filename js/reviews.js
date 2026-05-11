@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, arrayUnion, arrayRemove, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, arrayUnion, arrayRemove, getDoc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB6cfj0rKRz2B_MgPrELJe8sFav942TrF0",
@@ -22,6 +22,27 @@ const adminEmail = "alphacentavr.2012@gmail.com";
 window.login = () => signInWithPopup(auth, provider);
 window.logout = () => signOut(auth);
 
+// --- ФУНКЦІЯ ЕКСПОРТУ БАЗИ ---
+window.exportUserEmails = async () => {
+    if (auth.currentUser?.email !== adminEmail) return;
+    try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        let emails = "Ім'я;Email;Останній візит\n";
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const date = data.lastSeen ? new Date(data.lastSeen.toDate()).toLocaleString() : "Невідомо";
+            emails += `${data.name};${data.email};${date}\n`;
+        });
+        const blob = new Blob([emails], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.setAttribute("href", URL.createObjectURL(blob));
+        link.setAttribute("download", "meblivam_users_base.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (err) { console.error(err); }
+};
+
 window.deleteReview = async (id, authorEmail) => {
     const isOwner = auth.currentUser?.email === authorEmail;
     const isAdmin = auth.currentUser?.email === adminEmail;
@@ -32,7 +53,6 @@ window.deleteReview = async (id, authorEmail) => {
     }
 };
 
-// --- ТІЛЬКИ ЦЯ НОВА ФУНКЦІЯ ДЛЯ ВИДАЛЕННЯ ВІДПОВІДІ ---
 window.deleteReply = async (reviewId, replyObj) => {
     if (auth.currentUser?.email !== adminEmail) return;
     if (confirm("Видалити цю відповідь?")) {
@@ -99,7 +119,11 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         const userRef = doc(db, "users", user.uid);
         try { await setDoc(userRef, { name: user.displayName, email: user.email, photo: user.photoURL, lastSeen: serverTimestamp() }, { merge: true }); } catch (err) {}
-        authSection.innerHTML = `<div class="flex items-center justify-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10 max-w-fit mx-auto"><img src="${user.photoURL}" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full border border-amber-500"><span class="text-white text-[10px] uppercase font-bold">Привіт, ${user.displayName}</span><button onclick="logout()" class="text-amber-500 text-[10px] font-black uppercase hover:text-white transition-colors">Вийти</button></div>`;
+
+        const isAdmin = user.email === adminEmail;
+        const adminBtn = isAdmin ? `<button onclick="exportUserEmails()" class="ml-4 px-3 py-1 bg-green-600/20 border border-green-500/50 rounded-lg text-green-400 text-[9px] font-black uppercase hover:bg-green-600 hover:text-white transition-all">📥 База</button>` : "";
+
+        authSection.innerHTML = `<div class="flex items-center justify-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10 max-w-fit mx-auto"><img src="${user.photoURL}" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full border border-amber-500"><span class="text-white text-[10px] uppercase font-bold">Привіт, ${user.displayName}</span>${adminBtn}<button onclick="logout()" class="text-amber-500 text-[10px] font-black uppercase hover:text-white transition-colors">Вийти</button></div>`;
         if (formWrapper) formWrapper.style.display = 'block';
     } else {
         authSection.innerHTML = `<button onclick="login()" class="px-10 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl active:scale-95 transition-all text-white">Увійти через Google</button>`;
@@ -121,7 +145,6 @@ if (container) {
                 let repliesHtml = "";
                 if (d.replies) {
                     d.replies.forEach(r => {
-                        // Тільки адмін бачить цю кнопку видалення
                         const delBtn = isAdmin ? `<button onclick='deleteReply("${id}", ${JSON.stringify(r)})' class="ml-auto text-red-500 text-[8px] font-bold uppercase hover:text-white">Видалити</button>` : "";
                         repliesHtml += `<div class="mt-3 ml-6 p-3 border-l-2 ${r.isAdmin ? 'bg-amber-500/10 border-amber-500' : 'bg-white/5 border-white/10'} rounded-r-xl text-left flex justify-between items-start"><div><p class="text-[9px] font-black uppercase ${r.isAdmin ? 'text-amber-500' : 'text-slate-400'} mb-1">${r.isAdmin ? "Відповідь MebliVam" : r.name}:</p><p class="text-sm text-slate-200 font-light">"${r.text}"</p></div>${delBtn}</div>`;
                     });
