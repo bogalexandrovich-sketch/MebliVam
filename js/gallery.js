@@ -100,7 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
-    // 4. СВАЙПИ + DOUBLE TAP (ОБ'ЄДНАНО)
+    // 4. Свайпи + Подвійний тап
+    let lastTap = 0;
+    let isMultiTouch = false;
+
     overlay.addEventListener('touchstart', e => {
         if (e.touches.length > 1) {
             isMultiTouch = true;
@@ -112,30 +115,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     overlay.addEventListener('touchend', e => {
         const img = overlay.querySelector('img');
+        if (!img) return;
+
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTap;
 
-        // ЛОГІКА ПОДВІЙНОГО ТАПУ
+        // Перевірка на подвійний тап (менше 300мс)
         if (tapLength < 300 && tapLength > 0) {
-            if (img) {
-                if (img.style.transform === 'scale(2.5)') {
-                    img.style.transform = 'scale(1)';
-                } else {
-                    img.style.transform = 'scale(2.5)';
-                }
+            e.preventDefault(); // Зупиняємо стандартний зум браузера
+
+            // Перемикаємо масштаб
+            if (img.style.transform === 'scale(2.5)') {
+                img.style.transform = 'scale(1)';
+                img.style.zIndex = '1';
+            } else {
+                img.style.transform = 'scale(2.5)';
+                img.style.zIndex = '50'; // Виводимо на передній план
             }
-            lastTap = 0;
+            img.style.transition = 'transform 0.3s ease-out';
+
+            lastTap = 0; // Важливо скинути
             return;
         }
         lastTap = currentTime;
 
-        // ПЕРЕВІРКА НА ЗУМ (ЩОБ НЕ ГОРТАЛО)
-        const isZoomed = img && (img.style.transform === 'scale(2.5)' || (window.visualViewport && window.visualViewport.scale > 1.01));
+        // Блокування гортання, якщо картинка збільшена
+        const isZoomed = img.style.transform === 'scale(2.5)' || (window.visualViewport && window.visualViewport.scale > 1.01);
         if (isMultiTouch || isZoomed) return;
 
-        // РОЗРАХУНОК СВАЙПУ
+        // Звичайний свайп
         touchEndX = e.changedTouches[0].screenX;
         if (touchStartX - touchEndX > 60) nextPhoto();
         if (touchEndX - touchStartX > 60) prevPhoto();
     }, { passive: false });
-});
