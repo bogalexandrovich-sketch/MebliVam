@@ -95,10 +95,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
-    // 4. Свайпи
-    overlay.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+// 4. Свайпи (з захистом від перелистування при зумі)
+    let isMultiTouch = false; // Прапорець для відстеження зуму
+
+    overlay.addEventListener('touchstart', e => {
+        // Якщо на екрані більше 1 пальця — це зум
+        if (e.touches.length > 1) {
+            isMultiTouch = true;
+        } else {
+            isMultiTouch = false;
+            touchStartX = e.changedTouches[0].screenX;
+        }
+    }, { passive: true });
+
     overlay.addEventListener('touchend', e => {
+        // Якщо ми тільки що зумили (було 2+ пальці) — ігноруємо свайп
+        if (isMultiTouch) return;
+
         touchEndX = e.changedTouches[0].screenX;
+
+        // Розрахунок свайпу (як і був)
         if (touchStartX - touchEndX > 50) nextPhoto();
         if (touchEndX - touchStartX > 50) prevPhoto();
     }, { passive: true });
