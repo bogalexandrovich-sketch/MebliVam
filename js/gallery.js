@@ -95,7 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
-    // 4. Свайпи (блокування, якщо сторінка збільшена браузером)
+    // 4. Свайпи + Подвійний тап (ЗУМ)
+    let lastTap = 0;
     let isMultiTouch = false;
 
     overlay.addEventListener('touchstart', e => {
@@ -108,33 +109,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     overlay.addEventListener('touchend', e => {
-        // 1. Перевіряємо масштаб вікна (visualViewport)
-        // Більшість сучасних мобільних браузерів це підтримують.
-        const isPageZoomed = window.visualViewport && window.visualViewport.scale > 1.01;
+        const img = overlay.querySelector('img');
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
 
-        // 2. Якщо був мультитач АБО сторінка збільшена — виходимо
-        if (isMultiTouch || isPageZoomed) {
-            isMultiTouch = false;
+        // 1. ЛОГІКА ПОДВІЙНОГО ТАПУ
+        if (tapLength < 300 && tapLength > 0) {
+            if (img) {
+                // Вимикаємо стандартний зум браузера для цього тапу
+                if (e.cancelable) e.preventDefault();
+
+                if (img.style.transform === 'scale(2.5)') {
+                    img.style.transform = 'scale(1)';
+                } else {
+                    img.style.transform = 'scale(2.5)';
+                }
+                img.style.transition = 'transform 0.3s ease';
+            }
+            lastTap = 0; // Скидаємо, щоб не було потрійного тапу
             return;
         }
+        lastTap = currentTime;
 
+        // 2. БЛОКУВАННЯ ГОРТАННЯ
+        // Перевіряємо, чи картинка зараз збільшена (програмно або браузером)
+        const isZoomed = img && (img.style.transform === 'scale(2.5)' || (window.visualViewport && window.visualViewport.scale > 1.01));
+
+        if (isMultiTouch || isZoomed) return;
+
+        // 3. ЗВИЧАЙНИЙ СВАЙП
         touchEndX = e.changedTouches[0].screenX;
-
-        // 3. Звичайне гортання, якщо масштаб 1:1
         if (touchStartX - touchEndX > 60) nextPhoto();
         if (touchEndX - touchStartX > 60) prevPhoto();
-    }, { passive: true });
-
-        // 5. Клавіатура та клік по фону
-        overlay.onclick = (e) => { if (e.target === overlay) closeBtn?.click(); };
-        document.addEventListener('keydown', (e) => {
-            if (overlay.classList.contains('hidden')) return;
-            if (e.key === 'ArrowRight') nextPhoto();
-            if (e.key === 'ArrowLeft') prevPhoto();
-            if (e.key === 'Escape') closeBtn?.click();
-        });
-
-            // 6. Захист контенту
-            document.addEventListener('contextmenu', e => e.preventDefault());
-            document.addEventListener('dragstart', e => { if (e.target.nodeName === 'IMG') e.preventDefault(); });
-});
+    }, { passive: false }); // Важливо passive: false для preventDefault
