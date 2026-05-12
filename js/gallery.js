@@ -95,11 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
-// 4. Свайпи (з захистом від перелистування при зумі)
-    let isMultiTouch = false; // Прапорець для відстеження зуму
+    // 4. Свайпи (з повною блокуванням при збільшенні)
+    let isMultiTouch = false;
 
     overlay.addEventListener('touchstart', e => {
-        // Якщо на екрані більше 1 пальця — це зум
         if (e.touches.length > 1) {
             isMultiTouch = true;
         } else {
@@ -109,12 +108,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     overlay.addEventListener('touchend', e => {
-        // Якщо ми тільки що зумили (було 2+ пальці) — ігноруємо свайп
-        if (isMultiTouch) return;
+        // Отримуємо поточне фото
+        const activeImg = overlay.querySelector('img');
+
+        // Перевіряємо масштаб через transform (якщо використовуєш scale)
+        // Або простіший варіант: перевіряємо прапорець MultiTouch
+        // А головне — перевіряємо, чи ширина фото більша за ширину екрана
+        const isZoomed = activeImg && activeImg.getBoundingClientRect().width > window.innerWidth;
+
+        // Якщо був зум двома пальцями АБО фото зараз збільшене — не гортаємо
+        if (isMultiTouch || isZoomed) {
+            isMultiTouch = false; // Скидаємо прапорець
+            return;
+        }
 
         touchEndX = e.changedTouches[0].screenX;
 
-        // Розрахунок свайпу (як і був)
         if (touchStartX - touchEndX > 50) nextPhoto();
         if (touchEndX - touchStartX > 50) prevPhoto();
     }, { passive: true });
