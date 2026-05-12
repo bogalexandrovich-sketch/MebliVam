@@ -11,27 +11,34 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentIndex = 0;
     let touchStartX = 0;
     let touchEndX = 0;
+    let lastTap = 0;
+    let isMultiTouch = false;
 
-    // 1. Ініціалізація карток
+    // 1. ІНІЦІАЛІЗАЦІЯ КАРТОК (Тут був баг)
     const projectCards = document.querySelectorAll('.project-card');
     projectCards.forEach(card => {
         const rawPhotos = card.getAttribute('data-photos');
         if (!rawPhotos) return;
 
         const photos = rawPhotos.split(',').map(p => p.trim());
-        const countSpan = card.querySelector('.photo-count');
-        if (countSpan) countSpan.innerText = photos.length;
 
+        // Оновлюємо лічильник фото на самій картці
+        const countSpan = card.querySelector('.photo-count');
+        if (countSpan) {
+            countSpan.innerText = photos.length;
+        }
+
+        // Вішаємо клік на картку для відкриття галереї
         card.addEventListener('click', () => {
             currentPhotos = photos;
             currentIndex = 0;
-            updateGallery(true); // Відкриваємо без анімації виходу
+            updateGallery(true);
             overlay.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         });
     });
 
-    // 2. Основна функція оновлення з анімацією та підтримкою відео
+    // 2. ОНОВЛЕННЯ ГАЛЕРЕЇ
     function updateGallery(isFirstOpen = false) {
         const displayContainer = overlay.querySelector('.max-w-5xl, .max-w-\\[90vw\\]');
         if (!displayContainer) return;
@@ -48,15 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 element.src = fileUrl;
                 element.controls = true;
                 element.autoplay = true;
-                element.className = 'max-w-full max-h-[85vh] rounded-lg shadow-2xl border border-white/10 photo-enter';
+                element.className = 'max-w-full max-h-[85vh] rounded-lg shadow-2xl photo-enter';
             } else {
                 element = document.createElement('img');
                 element.src = fileUrl;
-                element.alt = "View";
-                element.className = 'max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl border border-white/10 photo-enter';
-                // Захист для нового зображення
+                element.className = 'max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl photo-enter';
+                element.style.transform = 'scale(1)'; // Скидаємо зум при перемиканні
+                element.style.transition = 'transform 0.3s ease';
                 element.oncontextmenu = e => e.preventDefault();
-                element.ondragstart = e => e.preventDefault();
             }
 
             displayContainer.appendChild(element);
@@ -66,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isFirstOpen) {
             changeContent();
         } else {
-            // Анімація виходу (стискання)
             const currentElement = displayContainer.querySelector('img, video');
             if (currentElement) {
                 currentElement.classList.add('photo-exit');
@@ -77,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. Навігація
+    // 3. НАВІГАЦІЯ
     const nextPhoto = () => {
         currentIndex = (currentIndex + 1) % currentPhotos.length;
         updateGallery();
@@ -95,10 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
-    // 4. Свайпи + Подвійний тап (ЗУМ)
-    let lastTap = 0;
-    let isMultiTouch = false;
-
+    // 4. СВАЙПИ + DOUBLE TAP (ОБ'ЄДНАНО)
     overlay.addEventListener('touchstart', e => {
         if (e.touches.length > 1) {
             isMultiTouch = true;
@@ -113,32 +115,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTap;
 
-        // 1. ЛОГІКА ПОДВІЙНОГО ТАПУ
+        // ЛОГІКА ПОДВІЙНОГО ТАПУ
         if (tapLength < 300 && tapLength > 0) {
             if (img) {
-                // Вимикаємо стандартний зум браузера для цього тапу
-                if (e.cancelable) e.preventDefault();
-
                 if (img.style.transform === 'scale(2.5)') {
                     img.style.transform = 'scale(1)';
                 } else {
                     img.style.transform = 'scale(2.5)';
                 }
-                img.style.transition = 'transform 0.3s ease';
             }
-            lastTap = 0; // Скидаємо, щоб не було потрійного тапу
+            lastTap = 0;
             return;
         }
         lastTap = currentTime;
 
-        // 2. БЛОКУВАННЯ ГОРТАННЯ
-        // Перевіряємо, чи картинка зараз збільшена (програмно або браузером)
+        // ПЕРЕВІРКА НА ЗУМ (ЩОБ НЕ ГОРТАЛО)
         const isZoomed = img && (img.style.transform === 'scale(2.5)' || (window.visualViewport && window.visualViewport.scale > 1.01));
-
         if (isMultiTouch || isZoomed) return;
 
-        // 3. ЗВИЧАЙНИЙ СВАЙП
+        // РОЗРАХУНОК СВАЙПУ
         touchEndX = e.changedTouches[0].screenX;
         if (touchStartX - touchEndX > 60) nextPhoto();
         if (touchEndX - touchStartX > 60) prevPhoto();
-    }, { passive: false }); // Важливо passive: false для preventDefault
+    }, { passive: false });
+});
