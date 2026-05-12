@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
-    // 4. Свайпи (з повною блокуванням при збільшенні)
+    // 4. Свайпи (блокування, якщо сторінка збільшена браузером)
     let isMultiTouch = false;
 
     overlay.addEventListener('touchstart', e => {
@@ -108,24 +108,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     overlay.addEventListener('touchend', e => {
-        // Отримуємо поточне фото
-        const activeImg = overlay.querySelector('img');
+        // 1. Перевіряємо масштаб вікна (visualViewport)
+        // Більшість сучасних мобільних браузерів це підтримують.
+        const isPageZoomed = window.visualViewport && window.visualViewport.scale > 1.01;
 
-        // Перевіряємо масштаб через transform (якщо використовуєш scale)
-        // Або простіший варіант: перевіряємо прапорець MultiTouch
-        // А головне — перевіряємо, чи ширина фото більша за ширину екрана
-        const isZoomed = activeImg && activeImg.getBoundingClientRect().width > window.innerWidth;
-
-        // Якщо був зум двома пальцями АБО фото зараз збільшене — не гортаємо
-        if (isMultiTouch || isZoomed) {
-            isMultiTouch = false; // Скидаємо прапорець
+        // 2. Якщо був мультитач АБО сторінка збільшена — виходимо
+        if (isMultiTouch || isPageZoomed) {
+            isMultiTouch = false;
             return;
         }
 
         touchEndX = e.changedTouches[0].screenX;
 
-        if (touchStartX - touchEndX > 50) nextPhoto();
-        if (touchEndX - touchStartX > 50) prevPhoto();
+        // 3. Звичайне гортання, якщо масштаб 1:1
+        if (touchStartX - touchEndX > 60) nextPhoto();
+        if (touchEndX - touchStartX > 60) prevPhoto();
     }, { passive: true });
 
         // 5. Клавіатура та клік по фону
