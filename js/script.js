@@ -116,3 +116,28 @@ document.addEventListener('DOMContentLoaded', () => {
             document.addEventListener('contextmenu', e => e.preventDefault());
             document.addEventListener('dragstart', e => { if (e.target.nodeName === 'IMG') e.preventDefault(); });
 });
+// Функція для керування рекламним банером
+function initAdBanner() {
+    const adBlock = document.getElementById('ad-block');
+    if (!adBlock) return; // Якщо на сторінці немає банера, нічого не робимо
+
+    // Перевіряємо, чи закривав користувач банер раніше (в будь-який час на будь-якій сторінці)
+    const isClosed = localStorage.getItem('adBannerClosed');
+
+    if (!isClosed) {
+        // Якщо не закривав — показуємо
+        adBlock.classList.remove('hidden');
+    }
+}
+
+// Функція, яка спрацьовує при натисканні на хрестик
+function closeAdBanner() {
+    const adBlock = document.getElementById('ad-block');
+    if (adBlock) {
+        adBlock.classList.add('hidden'); // Ховаємо зараз
+        localStorage.setItem('adBannerClosed', 'true'); // Запам'ятовуємо назавжди
+    }
+}
+
+// Запускаємо перевірку, як тільки сторінка завантажилася
+document.addEventListener('DOMContentLoaded', initAdBanner);
