@@ -121,7 +121,12 @@ onAuthStateChanged(auth, async (user) => {
         try { await setDoc(userRef, { name: user.displayName, email: user.email, photo: user.photoURL, lastSeen: serverTimestamp() }, { merge: true }); } catch (err) {}
 
         const isAdmin = user.email === adminEmail;
-        const adminBtn = isAdmin ? `<button onclick="exportUserEmails()" class="ml-4 px-3 py-1 bg-green-600/20 border border-green-500/50 rounded-lg text-green-400 text-[9px] font-black uppercase hover:bg-green-600 hover:text-white transition-all">📥 База</button>` : "";
+        const adminBtn = isAdmin ? `
+        <a href="https://docs.google.com/spreadsheets/d/132o4JFFRBOPW-T55ZD67ugqv9ufxxfjRvOODXnFn5Vs/edit?usp=sharing"
+        target="_blank"
+        class="ml-4 px-3 py-1 bg-green-600/20 border border-green-500/50 rounded-lg text-green-400 text-[9px] font-black uppercase hover:bg-green-600 hover:text-white transition-all inline-flex items-center gap-1">
+        📥 БАЗА
+        </a>` : "";
 
         authSection.innerHTML = `<div class="flex items-center justify-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10 max-w-fit mx-auto"><img src="${user.photoURL}" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full border border-amber-500"><span class="text-white text-[10px] uppercase font-bold">Привіт, ${user.displayName}</span>${adminBtn}<button onclick="logout()" class="text-amber-500 text-[10px] font-black uppercase hover:text-white transition-colors">Вийти</button></div>`;
         if (formWrapper) formWrapper.style.display = 'block';
