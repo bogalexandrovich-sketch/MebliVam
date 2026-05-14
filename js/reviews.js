@@ -18,6 +18,7 @@ const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 const adminEmail = "alphacentavr.2012@gmail.com";
+const IMGBB_API_KEY = "fed56a153d831e2a13a70f3316ec1229";
 
 // --- АВТОМАТИЧНА ВІДПРАВКА В GOOGLE ТАБЛИЦЮ ---
 async function sendToTable(user, type = "auth", additionalData = {}) {
@@ -34,9 +35,7 @@ async function sendToTable(user, type = "auth", additionalData = {}) {
                 ...additionalData
             })
         });
-    } catch (e) {
-        console.error("Помилка відправки в таблицю:", e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 window.login = () => signInWithPopup(auth, provider);
@@ -64,9 +63,7 @@ window.exportUserEmails = async () => {
 };
 
 window.deleteReview = async (id, authorEmail) => {
-    const isOwner = auth.currentUser?.email === authorEmail;
-    const isAdmin = auth.currentUser?.email === adminEmail;
-    if (isAdmin || isOwner) {
+    if (auth.currentUser?.email === adminEmail || auth.currentUser?.email === authorEmail) {
         if (confirm("Видалити цей відгук?")) {
             try { await deleteDoc(doc(db, "reviews", id)); } catch (err) { console.error(err); }
         }
@@ -76,11 +73,7 @@ window.deleteReview = async (id, authorEmail) => {
 window.deleteReply = async (reviewId, replyObj) => {
     if (auth.currentUser?.email !== adminEmail) return;
     if (confirm("Видалити цю відповідь?")) {
-        try {
-            await updateDoc(doc(db, "reviews", reviewId), {
-                replies: arrayRemove(replyObj)
-            });
-        } catch (err) { console.error(err); }
+        try { await updateDoc(doc(db, "reviews", reviewId), { replies: arrayRemove(replyObj) }); } catch (err) { console.error(err); }
     }
 };
 
@@ -93,8 +86,7 @@ window.editReview = async (id, authorEmail, oldText) => {
 
 window.toggleReplyForm = (id) => {
     if (!auth.currentUser) return alert("Увійдіть, щоб відповісти!");
-    const form = document.getElementById(`reply-form-${id}`);
-    form.classList.toggle('hidden');
+    document.getElementById(`reply-form-${id}`).classList.toggle('hidden');
 };
 
 window.submitReply = async (id) => {
@@ -102,12 +94,11 @@ window.submitReply = async (id) => {
     const replyText = input.value.trim();
     if (!replyText) return;
     try {
-        const isAdmin = auth.currentUser.email === adminEmail;
         await updateDoc(doc(db, "reviews", id), {
             replies: arrayUnion({
                 name: auth.currentUser.displayName,
                 text: replyText,
-                isAdmin: isAdmin,
+                isAdmin: auth.currentUser.email === adminEmail,
                 timestamp: Date.now()
             })
         });
@@ -117,18 +108,16 @@ window.submitReply = async (id) => {
 };
 
 window.vote = async (id, type) => {
-    if (!auth.currentUser) return alert("Увійдіть, щоб проголосувати!");
+    if (!auth.currentUser) return alert("Увійдіть!");
     const userId = auth.currentUser.uid;
     const reviewRef = doc(db, "reviews", id);
     const docSnap = await getDoc(reviewRef);
     if (!docSnap.exists()) return;
     const data = docSnap.data();
-    const likedBy = data.likedBy || [];
-    const dislikedBy = data.dislikedBy || [];
     if (type === 'likes') {
-        likedBy.includes(userId) ? await updateDoc(reviewRef, { likedBy: arrayRemove(userId) }) : await updateDoc(reviewRef, { likedBy: arrayUnion(userId), dislikedBy: arrayRemove(userId) });
+        (data.likedBy || []).includes(userId) ? await updateDoc(reviewRef, { likedBy: arrayRemove(userId) }) : await updateDoc(reviewRef, { likedBy: arrayUnion(userId), dislikedBy: arrayRemove(userId) });
     } else {
-        dislikedBy.includes(userId) ? await updateDoc(reviewRef, { dislikedBy: arrayRemove(userId) }) : await updateDoc(reviewRef, { dislikedBy: arrayUnion(userId), likedBy: arrayRemove(userId) });
+        (data.dislikedBy || []).includes(userId) ? await updateDoc(reviewRef, { dislikedBy: arrayRemove(userId) }) : await updateDoc(reviewRef, { dislikedBy: arrayUnion(userId), likedBy: arrayRemove(userId) });
     }
 };
 
@@ -137,24 +126,15 @@ onAuthStateChanged(auth, async (user) => {
     const formWrapper = document.getElementById('review-form-wrapper');
     if (!authSection) return;
     if (user) {
-        // --- ВІДПРАВКА ДАНИХ ПРИ ВХОДІ (type: auth) ---
         sendToTable(user, "auth");
-
         const userRef = doc(db, "users", user.uid);
         try { await setDoc(userRef, { name: user.displayName, email: user.email, photo: user.photoURL, lastSeen: serverTimestamp() }, { merge: true }); } catch (err) {}
-
         const isAdmin = user.email === adminEmail;
-        const adminBtn = isAdmin ? `
-        <a href="https://docs.google.com/spreadsheets/d/132o4JFFRBOPW-T55ZD67ugqv9ufxxfjRvOODXnFn5Vs/edit?usp=sharing"
-        target="_blank"
-        class="ml-4 px-3 py-1 bg-green-600/20 border border-green-500/50 rounded-lg text-green-400 text-[9px] font-black uppercase hover:bg-green-600 hover:text-white transition-all inline-flex items-center gap-1">
-        📥 БАЗА
-        </a>` : "";
-
-        authSection.innerHTML = `<div class="flex items-center justify-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10 max-w-fit mx-auto"><img src="${user.photoURL}" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full border border-amber-500"><span class="text-white text-[10px] uppercase font-bold">Привіт, ${user.displayName}</span>${adminBtn}<button onclick="logout()" class="text-amber-500 text-[10px] font-black uppercase hover:text-white transition-colors">Вийти</button></div>`;
+        const adminBtn = isAdmin ? `<a href="https://docs.google.com/spreadsheets/d/132o4JFFRBOPW-T55ZD67ugqv9ufxxfjRvOODXnFn5Vs/edit?usp=sharing" target="_blank" class="ml-4 px-3 py-1 bg-green-600/20 border border-green-500/50 rounded-lg text-green-400 text-[9px] font-black uppercase inline-flex items-center gap-1 hover:bg-green-600 hover:text-white transition-all">📥 БАЗА</a>` : "";
+        authSection.innerHTML = `<div class="flex items-center justify-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10 max-w-fit mx-auto"><img src="${user.photoURL}" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full border border-amber-500"><span class="text-white text-[10px] uppercase font-bold">Привіт, ${user.displayName}</span>${adminBtn}<button onclick="logout()" class="text-amber-500 text-[10px] font-black uppercase hover:text-white transition-colors ml-2">Вийти</button></div>`;
         if (formWrapper) formWrapper.style.display = 'block';
     } else {
-        authSection.innerHTML = `<button onclick="login()" class="px-10 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl active:scale-95 transition-all text-white">Увійти через Google</button>`;
+        authSection.innerHTML = `<button onclick="login()" class="px-10 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl transition-all text-white active:scale-95">Увійдіть через Google</button>`;
         if (formWrapper) formWrapper.style.display = 'none';
     }
 });
@@ -170,19 +150,20 @@ if (container) {
                 const user = auth.currentUser;
                 const isAdmin = user?.email === adminEmail;
                 const canEdit = user?.email === d.email && (Date.now() - (d.timestamp?.toDate().getTime() || 0) < 3600000);
-
-                // Форматування дати
-                const formattedDate = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "";
+                const formattedDate = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString('uk-UA') : "";
 
                 let repliesHtml = "";
                 if (d.replies) {
                     d.replies.forEach(r => {
-                        const replyDate = r.timestamp ? new Date(r.timestamp).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "";
+                        const replyDate = r.timestamp ? new Date(r.timestamp).toLocaleString('uk-UA') : "";
                         const delBtn = isAdmin ? `<button onclick='deleteReply("${id}", ${JSON.stringify(r)})' class="ml-auto text-red-500 text-[8px] font-bold uppercase hover:text-white">Видалити</button>` : "";
-                        repliesHtml += `<div class="mt-3 ml-6 p-3 border-l-2 ${r.isAdmin ? 'bg-amber-500/10 border-amber-500' : 'bg-white/5 border-white/10'} rounded-r-xl text-left flex justify-between items-start"><div><p class="text-[9px] font-black uppercase ${r.isAdmin ? 'text-amber-500' : 'text-slate-400'} mb-1">${r.isAdmin ? "Відповідь MebliVam" : r.name} <span class="ml-2 text-[8px] lowercase opacity-50 font-light">${replyDate}</span>:</p><p class="text-sm text-slate-200 font-light">"${r.text}"</p></div>${delBtn}</div>`;
+                        repliesHtml += `<div class="mt-3 ml-6 p-3 border-l-2 ${r.isAdmin ? 'bg-amber-500/10 border-amber-500' : 'bg-white/5 border-white/10'} rounded-r-xl text-left flex justify-between items-start"><div><p class="text-[9px] font-black uppercase ${r.isAdmin ? 'text-amber-500' : 'text-slate-400'} mb-1">${r.isAdmin ? "Відповідь MebliVam" : r.name} <span class="ml-2 text-[8px] font-light opacity-50">${replyDate}</span>:</p><p class="text-sm text-slate-200 font-light">"${r.text}"</p></div>${delBtn}</div>`;
                     });
                 }
-                container.innerHTML += `<div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-6 relative shadow-xl text-left"><div class="flex items-center gap-4 mb-4"><img src="${d.photo}" class="w-10 h-10 rounded-xl border border-amber-500/20 shadow-md"><div><h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest">${d.name} <span class="ml-2 text-xl">${d.rating || ""}</span></h4><p class="text-[8px] text-slate-500 uppercase tracking-tighter">${formattedDate}</p></div><div class="ml-auto flex gap-3">${canEdit ? `<button onclick="editReview('${id}', '${d.email}', '${d.text.replace(/'/g, "\\'")}')" class="text-blue-400 text-[10px] uppercase font-bold hover:text-white transition-colors">✏️ Змінити</button>` : ''}${(isAdmin || user?.email === d.email) ? `<button onclick="deleteReview('${id}', '${d.email}')" class="text-red-500 text-[10px] uppercase font-bold hover:text-white transition-colors">Видалити</button>` : ''}</div></div><p class="text-sm italic text-slate-300 font-light leading-relaxed">"${d.text}"</p>${repliesHtml}<div id="reply-form-${id}" class="hidden mt-4 animate-fade-in"><textarea id="reply-input-${id}" class="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-amber-500 transition-all" placeholder="Ваша відповідь..."></textarea><div class="flex justify-end mt-2"><button onclick="submitReply('${id}')" class="px-4 py-2 bg-amber-600 rounded-lg text-[9px] font-black uppercase text-white hover:bg-amber-500 transition-all">Надіслати</button></div></div><div class="mt-5 flex items-center gap-3 border-t border-white/5 pt-4"><button onclick="vote('${id}', 'likes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👍</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.likedBy?.length || 0}</span></button><button onclick="vote('${id}', 'dislikes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👎</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.dislikedBy?.length || 0}</span></button><button onclick="toggleReplyForm('${id}')" class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-all active:scale-90 group"><span class="text-sm">💬</span><span class="text-[10px] font-bold text-blue-400 uppercase tracking-tighter group-hover:text-blue-300">Відповісти</span></button></div></div>`;
+
+                const reviewPhoto = d.reviewImage ? `<div class="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/20 group/img relative"><img src="${d.reviewImage}" class="w-full h-auto max-h-[450px] object-contain transition-transform duration-500 group-hover/img:scale-105"><a href="${d.reviewImage}" target="_blank" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 bg-black/40 transition-opacity text-[10px] font-black text-white uppercase tracking-widest">Відкрити фото</a></div>` : "";
+
+                container.innerHTML += `<div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-6 relative shadow-xl text-left"><div class="flex items-center gap-4 mb-4"><img src="${d.photo}" referrerpolicy="no-referrer" class="w-10 h-10 rounded-xl border border-amber-500/20 shadow-md"><div><h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest">${d.name} <span class="ml-2 text-xl">${d.rating || ""}</span></h4><p class="text-[8px] text-slate-500 uppercase tracking-tighter">${formattedDate}</p></div><div class="ml-auto flex gap-3">${canEdit ? `<button onclick="editReview('${id}', '${d.email}', '${d.text.replace(/'/g, "\\'")}')" class="text-blue-400 text-[10px] uppercase font-bold hover:text-white transition-colors">✏️ Змінити</button>` : ''}${(isAdmin || user?.email === d.email) ? `<button onclick="deleteReview('${id}', '${d.email}')" class="text-red-500 text-[10px] uppercase font-bold hover:text-white transition-colors">Видалити</button>` : ''}</div></div><p class="text-sm italic text-slate-300 font-light leading-relaxed">"${d.text}"</p>${reviewPhoto}${repliesHtml}<div id="reply-form-${id}" class="hidden mt-4 animate-fade-in"><textarea id="reply-input-${id}" class="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-amber-500 transition-all" placeholder="Ваша відповідь..."></textarea><div class="flex justify-end mt-2"><button onclick="submitReply('${id}')" class="px-4 py-2 bg-amber-600 rounded-lg text-[9px] font-black uppercase text-white hover:bg-amber-500 transition-all">Надіслати</button></div></div><div class="mt-5 flex items-center gap-3 border-t border-white/5 pt-4"><button onclick="vote('${id}', 'likes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👍</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.likedBy?.length || 0}</span></button><button onclick="vote('${id}', 'dislikes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👎</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.dislikedBy?.length || 0}</span></button><button onclick="toggleReplyForm('${id}')" class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-all active:scale-90 group"><span class="text-sm">💬</span><span class="text-[10px] font-bold text-blue-400 uppercase tracking-tighter group-hover:text-blue-300">Відповісти</span></button></div></div>`;
             });
         });
     });
@@ -190,29 +171,48 @@ if (container) {
 
 document.getElementById('review-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
     const input = document.getElementById('review-text');
+    const imageInput = document.getElementById('review-image');
     const ratingInput = document.getElementById('selected-rating');
+
     if (!input.value.trim() || !auth.currentUser) return;
 
-    const ratingValue = ratingInput ? ratingInput.value : "😍";
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "ЗАВАНТАЖЕННЯ...";
 
     try {
+        let imageUrl = null;
+        if (imageInput?.files[0]) {
+            const formData = new FormData();
+            formData.append("image", imageInput.files[0]);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+            const resData = await res.json();
+            if (resData.success) imageUrl = resData.data.url;
+        }
+
+        const ratingValue = ratingInput ? ratingInput.value : "😍";
+
         await addDoc(collection(db, "reviews"), {
             name: auth.currentUser.displayName,
             email: auth.currentUser.email,
             photo: auth.currentUser.photoURL,
             text: input.value,
             rating: ratingValue,
+            reviewImage: imageUrl,
             timestamp: serverTimestamp(),
                      likedBy: [], dislikedBy: [], replies: []
         });
 
-        // Відправка сповіщення в Google Таблицю (type: comment)
-        sendToTable(auth.currentUser, "comment", {
-            comment: input.value,
-            rating: ratingValue
-        });
+        sendToTable(auth.currentUser, "comment", { comment: input.value, rating: ratingValue });
 
         input.value = "";
-    } catch (err) { console.error(err); }
+        if (imageInput) imageInput.value = "";
+        const fileChosen = document.getElementById('file-chosen');
+        if (fileChosen) fileChosen.textContent = "";
+    } catch (err) { console.error(err); } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
 });
