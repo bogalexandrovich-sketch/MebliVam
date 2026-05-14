@@ -19,6 +19,24 @@ const provider = new GoogleAuthProvider();
 
 const adminEmail = "alphacentavr.2012@gmail.com";
 
+// --- АВТОМАТИЧНА ВІДПРАВКА В GOOGLE ТАБЛИЦЮ ---
+async function sendToTable(user) {
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec";
+    try {
+        await fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: user.displayName || "Анонім",
+                email: user.email
+            })
+        });
+    } catch (e) {
+        console.error("Помилка відправки в таблицю:", e);
+    }
+}
+
 window.login = () => signInWithPopup(auth, provider);
 window.logout = () => signOut(auth);
 
@@ -117,6 +135,9 @@ onAuthStateChanged(auth, async (user) => {
     const formWrapper = document.getElementById('review-form-wrapper');
     if (!authSection) return;
     if (user) {
+        // --- ВІДПРАВКА ДАНИХ ПРИ ВХОДІ ---
+        sendToTable(user);
+
         const userRef = doc(db, "users", user.uid);
         try { await setDoc(userRef, { name: user.displayName, email: user.email, photo: user.photoURL, lastSeen: serverTimestamp() }, { merge: true }); } catch (err) {}
 
