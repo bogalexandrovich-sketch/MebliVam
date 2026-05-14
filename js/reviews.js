@@ -20,7 +20,7 @@ const provider = new GoogleAuthProvider();
 const adminEmail = "alphacentavr.2012@gmail.com";
 
 // --- АВТОМАТИЧНА ВІДПРАВКА В GOOGLE ТАБЛИЦЮ ---
-async function sendToTable(user) {
+async function sendToTable(user, type = "auth", additionalData = {}) {
     const scriptUrl = "https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec";
     try {
         await fetch(scriptUrl, {
@@ -28,8 +28,10 @@ async function sendToTable(user) {
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                type: type,
                 name: user.displayName || "Анонім",
-                email: user.email
+                email: user.email,
+                ...additionalData
             })
         });
     } catch (e) {
@@ -135,8 +137,8 @@ onAuthStateChanged(auth, async (user) => {
     const formWrapper = document.getElementById('review-form-wrapper');
     if (!authSection) return;
     if (user) {
-        // --- ВІДПРАВКА ДАНИХ ПРИ ВХОДІ ---
-        sendToTable(user);
+        // --- ВІДПРАВКА ДАНИХ ПРИ ВХОДІ (type: auth) ---
+        sendToTable(user, "auth");
 
         const userRef = doc(db, "users", user.uid);
         try { await setDoc(userRef, { name: user.displayName, email: user.email, photo: user.photoURL, lastSeen: serverTimestamp() }, { merge: true }); } catch (err) {}
@@ -168,14 +170,19 @@ if (container) {
                 const user = auth.currentUser;
                 const isAdmin = user?.email === adminEmail;
                 const canEdit = user?.email === d.email && (Date.now() - (d.timestamp?.toDate().getTime() || 0) < 3600000);
+
+                // Форматування дати
+                const formattedDate = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "";
+
                 let repliesHtml = "";
                 if (d.replies) {
                     d.replies.forEach(r => {
+                        const replyDate = r.timestamp ? new Date(r.timestamp).toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : "";
                         const delBtn = isAdmin ? `<button onclick='deleteReply("${id}", ${JSON.stringify(r)})' class="ml-auto text-red-500 text-[8px] font-bold uppercase hover:text-white">Видалити</button>` : "";
-                        repliesHtml += `<div class="mt-3 ml-6 p-3 border-l-2 ${r.isAdmin ? 'bg-amber-500/10 border-amber-500' : 'bg-white/5 border-white/10'} rounded-r-xl text-left flex justify-between items-start"><div><p class="text-[9px] font-black uppercase ${r.isAdmin ? 'text-amber-500' : 'text-slate-400'} mb-1">${r.isAdmin ? "Відповідь MebliVam" : r.name}:</p><p class="text-sm text-slate-200 font-light">"${r.text}"</p></div>${delBtn}</div>`;
+                        repliesHtml += `<div class="mt-3 ml-6 p-3 border-l-2 ${r.isAdmin ? 'bg-amber-500/10 border-amber-500' : 'bg-white/5 border-white/10'} rounded-r-xl text-left flex justify-between items-start"><div><p class="text-[9px] font-black uppercase ${r.isAdmin ? 'text-amber-500' : 'text-slate-400'} mb-1">${r.isAdmin ? "Відповідь MebliVam" : r.name} <span class="ml-2 text-[8px] lowercase opacity-50 font-light">${replyDate}</span>:</p><p class="text-sm text-slate-200 font-light">"${r.text}"</p></div>${delBtn}</div>`;
                     });
                 }
-                container.innerHTML += `<div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-6 relative shadow-xl text-left"><div class="flex items-center gap-4 mb-4"><img src="${d.photo}" class="w-10 h-10 rounded-xl border border-amber-500/20 shadow-md"><div><h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest">${d.name}</h4></div><div class="ml-auto flex gap-3">${canEdit ? `<button onclick="editReview('${id}', '${d.email}', '${d.text.replace(/'/g, "\\'")}')" class="text-blue-400 text-[10px] uppercase font-bold hover:text-white transition-colors">✏️ Змінити</button>` : ''}${(isAdmin || user?.email === d.email) ? `<button onclick="deleteReview('${id}', '${d.email}')" class="text-red-500 text-[10px] uppercase font-bold hover:text-white transition-colors">Видалити</button>` : ''}</div></div><p class="text-sm italic text-slate-300 font-light leading-relaxed">"${d.text}"</p>${repliesHtml}<div id="reply-form-${id}" class="hidden mt-4 animate-fade-in"><textarea id="reply-input-${id}" class="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-amber-500 transition-all" placeholder="Ваша відповідь..."></textarea><div class="flex justify-end mt-2"><button onclick="submitReply('${id}')" class="px-4 py-2 bg-amber-600 rounded-lg text-[9px] font-black uppercase text-white hover:bg-amber-500 transition-all">Надіслати</button></div></div><div class="mt-5 flex items-center gap-3 border-t border-white/5 pt-4"><button onclick="vote('${id}', 'likes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👍</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.likedBy?.length || 0}</span></button><button onclick="vote('${id}', 'dislikes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👎</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.dislikedBy?.length || 0}</span></button><button onclick="toggleReplyForm('${id}')" class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-all active:scale-90 group"><span class="text-sm">💬</span><span class="text-[10px] font-bold text-blue-400 uppercase tracking-tighter group-hover:text-blue-300">Відповісти</span></button></div></div>`;
+                container.innerHTML += `<div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-6 relative shadow-xl text-left"><div class="flex items-center gap-4 mb-4"><img src="${d.photo}" class="w-10 h-10 rounded-xl border border-amber-500/20 shadow-md"><div><h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest">${d.name} <span class="ml-2 text-xl">${d.rating || ""}</span></h4><p class="text-[8px] text-slate-500 uppercase tracking-tighter">${formattedDate}</p></div><div class="ml-auto flex gap-3">${canEdit ? `<button onclick="editReview('${id}', '${d.email}', '${d.text.replace(/'/g, "\\'")}')" class="text-blue-400 text-[10px] uppercase font-bold hover:text-white transition-colors">✏️ Змінити</button>` : ''}${(isAdmin || user?.email === d.email) ? `<button onclick="deleteReview('${id}', '${d.email}')" class="text-red-500 text-[10px] uppercase font-bold hover:text-white transition-colors">Видалити</button>` : ''}</div></div><p class="text-sm italic text-slate-300 font-light leading-relaxed">"${d.text}"</p>${repliesHtml}<div id="reply-form-${id}" class="hidden mt-4 animate-fade-in"><textarea id="reply-input-${id}" class="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-amber-500 transition-all" placeholder="Ваша відповідь..."></textarea><div class="flex justify-end mt-2"><button onclick="submitReply('${id}')" class="px-4 py-2 bg-amber-600 rounded-lg text-[9px] font-black uppercase text-white hover:bg-amber-500 transition-all">Надіслати</button></div></div><div class="mt-5 flex items-center gap-3 border-t border-white/5 pt-4"><button onclick="vote('${id}', 'likes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👍</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.likedBy?.length || 0}</span></button><button onclick="vote('${id}', 'dislikes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👎</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.dislikedBy?.length || 0}</span></button><button onclick="toggleReplyForm('${id}')" class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-all active:scale-90 group"><span class="text-sm">💬</span><span class="text-[10px] font-bold text-blue-400 uppercase tracking-tighter group-hover:text-blue-300">Відповісти</span></button></div></div>`;
             });
         });
     });
@@ -184,16 +191,28 @@ if (container) {
 document.getElementById('review-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = document.getElementById('review-text');
+    const ratingInput = document.getElementById('selected-rating');
     if (!input.value.trim() || !auth.currentUser) return;
+
+    const ratingValue = ratingInput ? ratingInput.value : "😍";
+
     try {
         await addDoc(collection(db, "reviews"), {
             name: auth.currentUser.displayName,
             email: auth.currentUser.email,
             photo: auth.currentUser.photoURL,
             text: input.value,
+            rating: ratingValue,
             timestamp: serverTimestamp(),
                      likedBy: [], dislikedBy: [], replies: []
         });
+
+        // Відправка сповіщення в Google Таблицю (type: comment)
+        sendToTable(auth.currentUser, "comment", {
+            comment: input.value,
+            rating: ratingValue
+        });
+
         input.value = "";
     } catch (err) { console.error(err); }
 });
