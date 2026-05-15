@@ -1,6 +1,8 @@
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// 1. Створюємо верстку реклами динамічно
+const auth = getAuth();
+
+// Створюємо верстку (зверни увагу: тут додано клас hidden за замовчуванням)
 const adsHTML = `
 <div id="adv-block" class="fixed bottom-6 right-6 z-[100] group hidden">
 <div class="relative bg-zinc-900/80 backdrop-blur-md border border-amber-500/30 p-4 rounded-xl shadow-2xl max-w-[200px] transition-all duration-500 hover:border-amber-500 hover:scale-105">
@@ -20,34 +22,30 @@ const adsHTML = `
 </div>
 </div>`;
 
-// 2. Додаємо рекламу на сторінку
 document.body.insertAdjacentHTML('beforeend', adsHTML);
 
-const auth = getAuth();
 const advBlock = document.getElementById('adv-block');
 const closeBtn = document.getElementById('close-ads-btn');
 
-// 3. Логіка відображення
 onAuthStateChanged(auth, (user) => {
     const isClosedInSession = sessionStorage.getItem('adsClosed');
 
     if (user) {
-        // Для АВТОРИЗОВАНИХ: приховуємо, якщо вже закривали
+        // Якщо користувач увійшов
         if (isClosedInSession === 'true') {
             advBlock.classList.add('hidden');
         } else {
             advBlock.classList.remove('hidden');
         }
     } else {
-        // Для ГОСТЕЙ: показуємо завжди
+        // Якщо це ГІСТЬ — показуємо завжди (або можеш теж додати перевірку сесії тут)
         advBlock.classList.remove('hidden');
     }
 });
 
-// 4. Логіка кнопки закриття
 closeBtn.onclick = () => {
     advBlock.classList.add('hidden');
-    if (auth.currentUser) {
-        sessionStorage.setItem('adsClosed', 'true');
-    }
+    // Тепер ми дозволяємо запам'ятовувати закриття ВСІМ,
+    // але для гостей це скинеться після оновлення сторінки (через onAuthStateChanged вище)
+    sessionStorage.setItem('adsClosed', 'true');
 };
