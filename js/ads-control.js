@@ -1,28 +1,18 @@
-import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// Функція керування рекламою
+function controlAds(user) {
+    const advBlock = document.getElementById('adv-block');
+    if (!advBlock) return;
 
-// Твої налаштування Firebase (копіюємо з основного скрипта)
-const firebaseConfig = {
-    apiKey: "AIzaSyB6cfj0rKRz2B_MgPrELJe8sFav942TrF0",
-    authDomain: "meblivam-pp-ua.firebaseapp.com",
-    projectId: "meblivam-pp-ua",
-    storageBucket: "meblivam-pp-ua.firebasestorage.app",
-    messagingSenderId: "212919546702",
-    appId: "1:212919546702:web:9ae37460e493ce9d39641f",
-    measurementId: "G-DQ8K8H4CT1"
-};
+    const isClosedInSession = sessionStorage.getItem('adsClosed') === 'true';
 
-// Ініціалізація (перевіряємо, чи додаток уже створений, щоб не було помилок)
-let app;
-try {
-    app = getApp();
-} catch (e) {
-    app = initializeApp(firebaseConfig);
+    if (user || isClosedInSession) {
+        advBlock.classList.add('hidden');
+    } else {
+        advBlock.classList.remove('hidden');
+    }
 }
 
-const auth = getAuth(app);
-
-// Верстка реклами
+// Створюємо верстку
 const adsHTML = `
 <div id="adv-block" class="fixed bottom-6 right-6 z-[100] group hidden">
 <div class="relative bg-zinc-900/80 backdrop-blur-md border border-amber-500/30 p-4 rounded-xl shadow-2xl max-w-[200px] transition-all duration-500 hover:border-amber-500 hover:scale-105">
@@ -44,27 +34,17 @@ const adsHTML = `
 
 document.body.insertAdjacentHTML('beforeend', adsHTML);
 
-const advBlock = document.getElementById('adv-block');
-const closeBtn = document.getElementById('close-ads-btn');
-
-// Одразу ховаємо, якщо закривали в цій сесії
-if (sessionStorage.getItem('adsClosed') === 'true') {
-    advBlock.classList.add('hidden');
-}
-
-onAuthStateChanged(auth, (user) => {
-    // Якщо користувач залогінився — реклама зникає
-    if (user) {
-        advBlock.classList.add('hidden');
-    } else {
-        // Якщо гість і ще не закривав — показуємо
-        if (sessionStorage.getItem('adsClosed') !== 'true') {
-            advBlock.classList.remove('hidden');
-        }
+// Логіка кнопки закриття
+document.addEventListener('click', (e) => {
+    if (e.target.closest('#close-ads-btn')) {
+        document.getElementById('adv-block').classList.add('hidden');
+        sessionStorage.setItem('adsClosed', 'true');
     }
 });
 
-closeBtn.onclick = () => {
-    advBlock.classList.add('hidden');
-    sessionStorage.setItem('adsClosed', 'true');
-};
+// Слухаємо подію авторизації, яку генерує основний скрипт Firebase
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+const auth = getAuth();
+onAuthStateChanged(auth, (user) => {
+    controlAds(user);
+});
