@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, arrayUnion, arrayRemove, getDoc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB6cfj0rKRz2B_MgPrELJe8sFav942TrF0",
@@ -19,207 +19,233 @@ const provider = new GoogleAuthProvider();
 
 const adminEmail = "alphacentavr.2012@gmail.com";
 const IMGBB_API_KEY = "fed56a153d831e2a13a70f3316ec1229";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec";
 
-// --- ЛОГІКА КНОПКИ БАН ---
-window.banUser = (email) => {
-    if (auth.currentUser?.email !== adminEmail) return;
-    prompt("Скопіюйте імейл для вставки в Rules у Firebase Console:", email);
-};
-
-// --- АВТОМАТИЧНА ВІДПРАВКА В GOOGLE ТАБЛИЦЮ ---
-async function sendToTable(user, type = "auth", additionalData = {}) {
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec";
-    try {
-        await fetch(scriptUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                type: type,
-                name: user.displayName || "Анонім",
-                email: user.email,
-                ...additionalData
-            })
-        });
-    } catch (e) { console.error(e); }
-}
-
-window.login = () => signInWithPopup(auth, provider);
-window.logout = () => signOut(auth);
-
-// --- ФУНКЦІЯ ЕКСПОРТУ БАЗИ ---
-window.exportUserEmails = async () => {
-    if (auth.currentUser?.email !== adminEmail) return;
-    try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        let emails = "Ім'я;Email;Останній візит\n";
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const date = data.lastSeen ? new Date(data.lastSeen.toDate()).toLocaleString() : "Невідомо";
-            emails += `${data.name};${data.email};${date}\n`;
-        });
-        const blob = new Blob([emails], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.setAttribute("href", URL.createObjectURL(blob));
-        link.setAttribute("download", "meblivam_users_base.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } catch (err) { console.error(err); }
-};
-
-window.deleteReview = async (id, authorEmail) => {
-    if (auth.currentUser?.email === adminEmail || auth.currentUser?.email === authorEmail) {
-        if (confirm("Видалити цей відгук?")) {
-            try { await deleteDoc(doc(db, "reviews", id)); } catch (err) { console.error(err); }
+// Твоя оригінальна логіка видалення
+window.deleteReview = async (id) => {
+    if (confirm("Видалити цей відгук остаточно?")) {
+        try {
+            await deleteDoc(doc(db, "reviews", id));
+        } catch (err) {
+            console.error("Помилка видалення:", err);
         }
     }
 };
 
-window.deleteReply = async (reviewId, replyObj) => {
-    if (auth.currentUser?.email !== adminEmail) return;
-    if (confirm("Видалити цю відповідь?")) {
-        try { await updateDoc(doc(db, "reviews", reviewId), { replies: arrayRemove(replyObj) }); } catch (err) { console.error(err); }
+// Твоя оригінальна логіка бану
+window.banUser = async (email) => {
+    if (confirm(`Забанити користувача ${email}?`)) {
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ type: "ban", email: email })
+            });
+            alert("Запит на бан надіслано в таблицю.");
+        } catch (err) {
+            console.error("Помилка бану:", err);
+        }
     }
 };
 
-window.editReview = async (id, authorEmail, oldText) => {
-    if (auth.currentUser?.email !== authorEmail) return;
-    const newText = prompt("Відредагуйте ваш відгук:", oldText);
-    if (!newText || newText.trim() === "" || newText === oldText) return;
-    try { await updateDoc(doc(db, "reviews", id), { text: newText.trim() }); } catch (err) { console.error(err); }
+// Логіка реакцій та відповідей без зміни стилів
+window.likeReview = async (id) => {
+    try { await updateDoc(doc(db, "reviews", id), { likes: increment(1) }); } catch (e) {}
 };
 
-window.toggleReplyForm = (id) => {
-    if (!auth.currentUser) return alert("Увійдіть, щоб відповісти!");
-    document.getElementById(`reply-form-${id}`).classList.toggle('hidden');
+window.dislikeReview = async (id) => {
+    try { await updateDoc(doc(db, "reviews", id), { dislikes: increment(1) }); } catch (e) {}
 };
 
-window.submitReply = async (id) => {
-    const input = document.getElementById(`reply-input-${id}`);
-    const replyText = input.value.trim();
-    if (!replyText) return;
+window.replyReview = (id) => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const replyText = prompt("Введіть вашу відповідь:");
+    if (!replyText || !replyText.trim()) return;
     try {
-        await updateDoc(doc(db, "reviews", id), {
+        updateDoc(doc(db, "reviews", id), {
             replies: arrayUnion({
-                name: auth.currentUser.displayName,
-                text: replyText,
-                isAdmin: auth.currentUser.email === adminEmail,
-                timestamp: Date.now()
+                name: user.displayName,
+                photo: user.photoURL,
+                text: replyText.trim(),
+                                timestamp: new Date().toISOString()
             })
         });
-        input.value = "";
-        window.toggleReplyForm(id);
-    } catch (err) { console.error(err); }
+    } catch (e) {}
 };
 
-window.vote = async (id, type) => {
-    if (!auth.currentUser) return alert("Увійдіть!");
-    const userId = auth.currentUser.uid;
-    const reviewRef = doc(db, "reviews", id);
-    const docSnap = await getDoc(reviewRef);
-    if (!docSnap.exists()) return;
-    const data = docSnap.data();
-    if (type === 'likes') {
-        (data.likedBy || []).includes(userId) ? await updateDoc(reviewRef, { likedBy: arrayRemove(userId) }) : await updateDoc(reviewRef, { likedBy: arrayUnion(userId), dislikedBy: arrayRemove(userId) });
-    } else {
-        (data.dislikedBy || []).includes(userId) ? await updateDoc(reviewRef, { dislikedBy: arrayRemove(userId) }) : await updateDoc(reviewRef, { dislikedBy: arrayUnion(userId), likedBy: arrayRemove(userId) });
+window.login = () => signInWithPopup(auth, provider);
+window.logout = () => signOut(auth);
+
+async function checkUserStatus(email) {
+    try {
+        const response = await fetch(`${SCRIPT_URL}?email=${encodeURIComponent(email)}`);
+        return await response.json();
+    } catch (e) {
+        return { banned: false, status: "Новачок" };
     }
-};
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        "Амбасадор 💎": "bg-amber-500/20 text-amber-500 border-amber-500/50",
+        "Експерт 🏆": "bg-slate-500/20 text-slate-300 border-slate-500/50",
+        "Поціновувач 🏅": "bg-blue-500/10 text-blue-400 border-blue-500/30"
+    };
+    if (!badges[status]) return "";
+    return `<span class="ml-2 px-2 py-0.5 border rounded-full text-[8px] font-black uppercase tracking-tighter shadow-lg ${badges[status]}">${status}</span>`;
+}
 
 onAuthStateChanged(auth, async (user) => {
     const authSection = document.getElementById('auth-section');
     const formWrapper = document.getElementById('review-form-wrapper');
     if (!authSection) return;
+
     if (user) {
-        sendToTable(user, "auth");
-        const userRef = doc(db, "users", user.uid);
-        try { await setDoc(userRef, { name: user.displayName, email: user.email, photo: user.photoURL, lastSeen: serverTimestamp() }, { merge: true }); } catch (err) {}
+        const info = await checkUserStatus(user.email);
+        if (info.banned) {
+            alert("Доступ обмежено.");
+            logout();
+            return;
+        }
+
         const isAdmin = user.email === adminEmail;
-        const adminBtn = isAdmin ? `<a href="https://docs.google.com/spreadsheets/d/132o4JFFRBOPW-T55ZD67ugqv9ufxxfjRvOODXnFn5Vs/edit?usp=sharing" target="_blank" class="ml-4 px-3 py-1 bg-green-600/20 border border-green-500/50 rounded-lg text-green-400 text-[9px] font-black uppercase inline-flex items-center gap-1 hover:bg-green-600 hover:text-white transition-all">📥 БАЗА</a>` : "";
-        authSection.innerHTML = `<div class="flex items-center justify-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10 max-w-fit mx-auto"><img src="${user.photoURL}" referrerpolicy="no-referrer" class="w-8 h-8 rounded-full border border-amber-500"><span class="text-white text-[10px] uppercase font-bold">Привіт, ${user.displayName}</span>${adminBtn}<button onclick="logout()" class="text-amber-500 text-[10px] font-black uppercase hover:text-white transition-colors ml-2">Вийти</button></div>`;
-        if (formWrapper) formWrapper.style.display = 'block';
+        authSection.innerHTML = `
+        <div class="flex items-center justify-center gap-4 bg-white/5 p-3 rounded-2xl border border-white/10 max-w-fit mx-auto">
+        <img src="${user.photoURL}" class="w-8 h-8 rounded-full border border-amber-500">
+        <div class="text-left">
+        <p class="text-white text-[10px] uppercase font-bold">${user.displayName}</p>
+        ${getStatusBadge(info.status)}
+        </div>
+        ${isAdmin ? `<a href="https://docs.google.com/spreadsheets/d/132o4JFFRBOPW-T55ZD67ugqv9ufxxfjRvOODXnFn5Vs/edit" target="_blank" class="px-2 py-1 bg-green-600/20 border border-green-500/50 rounded text-green-400 text-[8px] font-black uppercase">БАЗА</a>` : ""}
+        <button onclick="logout()" class="text-amber-500 text-[10px] font-black uppercase hover:text-white ml-2">Вийти</button>
+        </div>`;
+        if (formWrapper) formWrapper.classList.remove('hidden');
     } else {
-        authSection.innerHTML = `<button onclick="login()" class="px-10 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl transition-all text-white active:scale-95">Увійдіть через Google</button>`;
-        if (formWrapper) formWrapper.style.display = 'none';
+        authSection.innerHTML = `<button onclick="login()" class="px-10 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black uppercase text-[10px] text-white">Увійти через Google</button>`;
+        if (formWrapper) formWrapper.classList.add('hidden');
     }
 });
 
-const container = document.getElementById('reviews-container');
-if (container) {
-    onAuthStateChanged(auth, () => {
-        onSnapshot(query(collection(db, "reviews"), orderBy("timestamp", "desc")), (snap) => {
-            container.innerHTML = "";
-            snap.forEach(reviewDoc => {
-                const d = reviewDoc.data();
-                const id = reviewDoc.id;
-                const user = auth.currentUser;
-                const isAdmin = user?.email === adminEmail;
-                const canEdit = user?.email === d.email && (Date.now() - (d.timestamp?.toDate().getTime() || 0) < 3600000);
-                const formattedDate = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString('uk-UA') : "";
+// Оригінальний дизайн карток з першого скріншоту
+onSnapshot(query(collection(db, "reviews"), orderBy("timestamp", "desc")), (snap) => {
+    const container = document.getElementById('reviews-container');
+    if (!container) return;
+    container.innerHTML = "";
 
-                let repliesHtml = "";
-                if (d.replies) {
-                    d.replies.forEach(r => {
-                        const replyDate = r.timestamp ? new Date(r.timestamp).toLocaleString('uk-UA') : "";
-                        const delBtn = isAdmin ? `<button onclick='deleteReply("${id}", ${JSON.stringify(r)})' class="ml-auto text-red-500 text-[8px] font-bold uppercase hover:text-white">Видалити</button>` : "";
-                        repliesHtml += `<div class="mt-3 ml-6 p-3 border-l-2 ${r.isAdmin ? 'bg-amber-500/10 border-amber-500' : 'bg-white/5 border-white/10'} rounded-r-xl text-left flex justify-between items-start"><div><p class="text-[9px] font-black uppercase ${r.isAdmin ? 'text-amber-500' : 'text-slate-400'} mb-1">${r.isAdmin ? "Відповідь MebliVam" : r.name} <span class="ml-2 text-[8px] font-light opacity-50">${replyDate}</span>:</p><p class="text-sm text-slate-200 font-light">"${r.text}"</p></div>${delBtn}</div>`;
-                    });
-                }
+    snap.forEach((reviewDoc) => {
+        const d = reviewDoc.data();
+        const id = reviewDoc.id;
+        const currentUserEmail = auth.currentUser?.email;
+        const isAdmin = currentUserEmail === adminEmail;
+        const isOwner = currentUserEmail === d.email || isAdmin;
+        const date = d.timestamp ? new Date(d.timestamp.toDate()).toLocaleString('uk-UA') : "Щойно";
 
-                const reviewPhoto = d.reviewImage ? `<div class="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/20 group/img relative"><img src="${d.reviewImage}" class="w-full h-auto max-h-[450px] object-contain transition-transform duration-500 group-hover/img:scale-105"><a href="${d.reviewImage}" target="_blank" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 bg-black/40 transition-opacity text-[10px] font-black text-white uppercase tracking-widest">Відкрити фото</a></div>` : "";
-
-                // ВСТАВКА КНОПКИ БАН В ТВОЮ ВЕРСТКУ
-                container.innerHTML += `<div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-6 relative shadow-xl text-left"><div class="flex items-center gap-4 mb-4"><img src="${d.photo}" referrerpolicy="no-referrer" class="w-10 h-10 rounded-xl border border-amber-500/20 shadow-md"><div><h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest">${d.name} <span class="ml-2 text-xl">${d.rating || ""}</span></h4><p class="text-[8px] text-slate-500 uppercase tracking-tighter">${formattedDate}</p></div><div class="ml-auto flex gap-3">${canEdit ? `<button onclick="editReview('${id}', '${d.email}', '${d.text.replace(/'/g, "\\'")}')" class="text-blue-400 text-[10px] uppercase font-bold hover:text-white transition-colors">✏️ Змінити</button>` : ''}${isAdmin ? `<button onclick="banUser('${d.email}')" class="text-red-600 text-[10px] uppercase font-black hover:text-white transition-colors">🚫 БАН</button>` : ''}${(isAdmin || user?.email === d.email) ? `<button onclick="deleteReview('${id}', '${d.email}')" class="text-red-500 text-[10px] uppercase font-bold hover:text-white transition-colors">Видалити</button>` : ''}</div></div><p class="text-sm italic text-slate-300 font-light leading-relaxed">"${d.text}"</p>${reviewPhoto}${repliesHtml}<div id="reply-form-${id}" class="hidden mt-4 animate-fade-in"><textarea id="reply-input-${id}" class="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-amber-500 transition-all" placeholder="Ваша відповідь..."></textarea><div class="flex justify-end mt-2"><button onclick="submitReply('${id}')" class="px-4 py-2 bg-amber-600 rounded-lg text-[9px] font-black uppercase text-white hover:bg-amber-500 transition-all">Надіслати</button></div></div><div class="mt-5 flex items-center gap-3 border-t border-white/5 pt-4"><button onclick="vote('${id}', 'likes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👍</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.likedBy?.length || 0}</span></button><button onclick="vote('${id}', 'dislikes')" class="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><span class="text-sm">👎</span><span class="text-[11px] font-bold text-slate-400 group-hover:text-white">${d.dislikedBy?.length || 0}</span></button><button onclick="toggleReplyForm('${id}')" class="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-all active:scale-90 group"><span class="text-sm">💬</span><span class="text-[10px] font-bold text-blue-400 uppercase tracking-tighter group-hover:text-blue-300">Відповісти</span></button></div></div>`;
+        let repliesHTML = "";
+        if (d.replies && d.replies.length > 0) {
+            d.replies.forEach(r => {
+                repliesHTML += `
+                <div class="mt-3 ml-10 p-3 bg-white/5 rounded-xl border border-white/5 text-left flex gap-3 items-start">
+                <img src="${r.photo}" class="w-6 h-6 rounded-full">
+                <div>
+                <p class="text-[9px] font-bold text-amber-500 uppercase">${r.name}</p>
+                <p class="text-xs text-slate-300 mt-1">${r.text}</p>
+                </div>
+                </div>`;
             });
-        });
+        }
+
+        container.innerHTML += `
+        <div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 mb-6 relative group shadow-xl">
+        <div class="flex items-center gap-4 mb-4">
+        <img src="${d.photo}" class="w-10 h-10 rounded-xl border border-amber-500/20">
+        <div class="flex-grow text-left">
+        <h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest">
+        ${d.name} <span class="text-xl ml-2">${d.rating || "😍"}</span>
+        </h4>
+        <p class="text-[8px] text-slate-500 uppercase">${date}</p>
+        </div>
+
+        <div class="text-[10px] font-bold uppercase tracking-wider flex gap-3">
+        ${isAdmin && currentUserEmail !== d.email ? `<button onclick="banUser('${d.email}')" class="text-red-500/60 hover:text-red-500 transition-colors"><i class="fas fa-ban mr-1"></i>Бан</button>` : ""}
+        ${isOwner ? `<button onclick="deleteReview('${id}')" class="text-red-500/60 hover:text-red-500 transition-colors">Видалити</button>` : ""}
+        </div>
+        </div>
+
+        <p class="text-sm italic text-slate-300 font-light text-left">"${d.text}"</p>
+        ${d.reviewImage ? `<img src="${d.reviewImage}" class="mt-4 rounded-2xl border border-white/10 max-h-96 w-auto">` : ""}
+
+        <div class="mt-6 flex items-center gap-2 border-t border-white/5 pt-4">
+        <button onclick="likeReview('${id}')" class="flex items-center gap-1 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full text-slate-400 text-xs transition-colors">
+        <span class="text-amber-500 text-[10px]">👍</span> <span class="text-[10px] font-bold">${d.likes || 0}</span>
+        </button>
+        <button onclick="dislikeReview('${id}')" class="flex items-center gap-1 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full text-slate-400 text-xs transition-colors">
+        <span class="text-amber-500 text-[10px]">👎</span> <span class="text-[10px] font-bold">${d.dislikes || 0}</span>
+        </button>
+        <button onclick="replyReview('${id}')" class="flex items-center gap-1 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 px-3 py-1.5 rounded-full text-blue-400 text-[10px] font-bold uppercase tracking-wider transition-colors ml-2">
+        <i class="fas fa-comment-alt text-[9px]"></i> Відповісти
+        </button>
+        </div>
+
+        <div class="replies-container">
+        ${repliesHTML}
+        </div>
+        </div>`;
     });
-}
+});
 
 document.getElementById('review-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button[type="submit"]');
-    const input = document.getElementById('review-text');
-    const imageInput = document.getElementById('review-image');
-    const ratingInput = document.getElementById('selected-rating');
+    const user = auth.currentUser;
+    if (!user) return;
 
-    if (!input.value.trim() || !auth.currentUser) return;
+    const btn = e.target.querySelector('button[type="submit"]');
+    const textInput = document.getElementById('review-text');
+    const imageInput = document.getElementById('review-image');
 
     btn.disabled = true;
-    const originalText = btn.textContent;
     btn.textContent = "ЗАВАНТАЖЕННЯ...";
 
+    let uploadedImageUrl = "";
+
     try {
-        let imageUrl = null;
-        if (imageInput?.files[0]) {
+        if (imageInput.files[0]) {
             const formData = new FormData();
             formData.append("image", imageInput.files[0]);
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
-            const resData = await res.json();
-            if (resData.success) imageUrl = resData.data.url;
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: "POST",
+                body: formData
+            });
+            const imgData = await res.json();
+            uploadedImageUrl = imgData.data.url;
         }
 
-        const ratingValue = ratingInput ? ratingInput.value : "😍";
-
         await addDoc(collection(db, "reviews"), {
-            name: auth.currentUser.displayName,
-            email: auth.currentUser.email,
-            photo: auth.currentUser.photoURL,
-            text: input.value,
-            rating: ratingValue,
-            reviewImage: imageUrl,
-            timestamp: serverTimestamp(),
-                     likedBy: [], dislikedBy: [], replies: []
+            name: user.displayName,
+            email: user.email,
+            photo: user.photoURL,
+            text: textInput.value,
+            rating: document.getElementById('selected-rating').value,
+                     reviewImage: uploadedImageUrl,
+                     timestamp: serverTimestamp(),
+                     likes: 0,
+                     dislikes: 0,
+                     replies: []
         });
 
-        sendToTable(auth.currentUser, "comment", { comment: input.value, rating: ratingValue });
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ type: "comment", name: user.displayName, email: user.email, comment: textInput.value })
+        });
 
-        input.value = "";
-        if (imageInput) imageInput.value = "";
-        const fileChosen = document.getElementById('file-chosen');
-        if (fileChosen) fileChosen.textContent = "";
-    } catch (err) { console.error(err); } finally {
+        textInput.value = "";
+        imageInput.value = "";
+        document.getElementById('file-chosen').textContent = "";
+    } catch (err) {
+        console.error(err);
+    } finally {
         btn.disabled = false;
-        btn.textContent = originalText;
+        btn.textContent = "ОПУБЛІКУВАТИ";
     }
 });

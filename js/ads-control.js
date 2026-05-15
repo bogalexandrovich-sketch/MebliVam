@@ -1,18 +1,6 @@
-// Функція керування рекламою
-function controlAds(user) {
-    const advBlock = document.getElementById('adv-block');
-    if (!advBlock) return;
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const isClosedInSession = sessionStorage.getItem('adsClosed') === 'true';
-
-    if (user || isClosedInSession) {
-        advBlock.classList.add('hidden');
-    } else {
-        advBlock.classList.remove('hidden');
-    }
-}
-
-// Створюємо верстку
+// 1. Створюємо верстку реклами (додаємо id для всього блоку)
 const adsHTML = `
 <div id="adv-block" class="fixed bottom-6 right-6 z-[100] group hidden">
 <div class="relative bg-zinc-900/80 backdrop-blur-md border border-amber-500/30 p-4 rounded-xl shadow-2xl max-w-[200px] transition-all duration-500 hover:border-amber-500 hover:scale-105">
@@ -32,19 +20,33 @@ const adsHTML = `
 </div>
 </div>`;
 
+// Вставляємо рекламу в DOM
 document.body.insertAdjacentHTML('beforeend', adsHTML);
 
-// Логіка кнопки закриття
-document.addEventListener('click', (e) => {
-    if (e.target.closest('#close-ads-btn')) {
-        document.getElementById('adv-block').classList.add('hidden');
-        sessionStorage.setItem('adsClosed', 'true');
+const auth = getAuth();
+const advBlock = document.getElementById('adv-block');
+
+// 2. СУВОРА ЛОГІКА ВІДОБРАЖЕННЯ
+onAuthStateChanged(auth, (user) => {
+    // Перевіряємо, чи користувач закрив рекламу вручну (для гостей)
+    const isClosedInSession = sessionStorage.getItem('adsClosed') === 'true';
+
+    if (user) {
+        // ЯКЩО АВТОРИЗОВАНИЙ (ти) — видаляємо рекламу назавжди
+        advBlock.remove();
+        console.log("Welcome, Guru! Ads blocked.");
+    } else if (!isClosedInSession) {
+        // ЯКЩО ГІСТЬ і ще не закривав — показуємо
+        advBlock.classList.remove('hidden');
     }
 });
 
-// Слухаємо подію авторизації, яку генерує основний скрипт Firebase
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-const auth = getAuth();
-onAuthStateChanged(auth, (user) => {
-    controlAds(user);
+// 3. Обробка кліку на закриття (для гостей)
+document.body.addEventListener('click', (e) => {
+    const closeBtn = e.target.closest('#close-ads-btn');
+    if (closeBtn && advBlock) {
+        advBlock.classList.add('hidden');
+        // Запам'ятовуємо вибір гостя на час сесії
+        sessionStorage.setItem('adsClosed', 'true');
+    }
 });
