@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB6cfj0rKRz2B_MgPrELJe8sFav942TrF0",
@@ -21,13 +21,26 @@ const adminEmail = "alphacentavr.2012@gmail.com";
 const IMGBB_API_KEY = "fed56a153d831e2a13a70f3316ec1229";
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec";
 
-// Твоя оригінальна логіка видалення
+// Твоя оригінальна логіка видалення відгуку
 window.deleteReview = async (id) => {
     if (confirm("Видалити цей відгук остаточно?")) {
         try {
             await deleteDoc(doc(db, "reviews", id));
         } catch (err) {
             console.error("Помилка видалення:", err);
+        }
+    }
+};
+
+// Логіка видалення окремої відповіді з масиву
+window.deleteReply = async (reviewId, replyObject) => {
+    if (confirm("Видалити цю відповідь остаточно?")) {
+        try {
+            await updateDoc(doc(db, "reviews", reviewId), {
+                replies: arrayRemove(replyObject)
+            });
+        } catch (err) {
+            console.error("Помилка видалення відповіді:", err);
         }
     }
 };
@@ -66,12 +79,27 @@ window.replyReview = (id) => {
         updateDoc(doc(db, "reviews", id), {
             replies: arrayUnion({
                 name: user.displayName,
+                email: user.email, // Тепер зберігаємо email для бану та видалення
                 photo: user.photoURL,
                 text: replyText.trim(),
                                 timestamp: new Date().toISOString()
             })
         });
-    } catch (e) {}
+
+        // Інтегровано надсилання відповіді в Google Таблицю
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                type: "reply",
+                name: user.displayName,
+                email: user.email,
+                comment: replyText.trim()
+            })
+        });
+    } catch (e) {
+        console.error("Помилка відправки відповіді:", e);
+    }
 };
 
 window.login = () => signInWithPopup(auth, provider);
@@ -89,7 +117,7 @@ async function checkUserStatus(email) {
 function getStatusBadge(status) {
     const badges = {
         "Амбасадор 💎": "bg-amber-500/20 text-amber-500 border-amber-500/50",
-        "Експерт 🏆": "bg-slate-500/20 text-slate-300 border-slate-500/50",
+        "Експер整理 🏆": "bg-slate-500/20 text-slate-300 border-slate-500/50",
         "Поціновувач 🏅": "bg-blue-500/10 text-blue-400 border-blue-500/30"
     };
     if (!badges[status]) return "";
@@ -144,11 +172,23 @@ onSnapshot(query(collection(db, "reviews"), orderBy("timestamp", "desc")), (snap
         let repliesHTML = "";
         if (d.replies && d.replies.length > 0) {
             d.replies.forEach(r => {
+                const isReplyOwner = currentUserEmail === r.email || isAdmin;
+
+                // Перетворюємо об'єкт відповіді на рядок, щоб безпечно передати його у функцію видалення
+                const replyJSON = JSON.stringify(r).replace(/"/g, '&quot;');
+
                 repliesHTML += `
-                <div class="mt-3 ml-10 p-3 bg-white/5 rounded-xl border border-white/5 text-left flex gap-3 items-start">
+                <div class="mt-3 ml-10 p-3 bg-white/5 rounded-xl border border-white/5 text-left flex gap-3 items-start relative">
                 <img src="${r.photo}" class="w-6 h-6 rounded-full">
-                <div>
+                <div class="flex-grow">
+                <div class="flex items-center justify-between">
                 <p class="text-[9px] font-bold text-amber-500 uppercase">${r.name}</p>
+
+                <div class="text-[9px] font-bold uppercase tracking-wider flex gap-3 ml-2">
+                ${isAdmin && r.email && currentUserEmail !== r.email ? `<button onclick="banUser('${r.email}')" class="text-red-500/60 hover:text-red-500 transition-colors"><i class="fas fa-ban mr-1"></i>Бан</button>` : ""}
+                ${isReplyOwner ? `<button onclick="deleteReply('${id}', ${replyJSON})" class="text-red-500/60 hover:text-red-500 transition-colors">Видалити</button>` : ""}
+                </div>
+                </div>
                 <p class="text-xs text-slate-300 mt-1">${r.text}</p>
                 </div>
                 </div>`;
