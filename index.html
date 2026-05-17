@@ -34,7 +34,7 @@
                     <img src="assets/images/logo-meblivam.png"
                          alt="MebliVam Logo"
                          class="h-20 md:h-24 w-auto object-contain hover:scale-[1.02] transition-transform duration-300 brightness-110
-                                rounded-3xl shadow-2xl border border-white/10">
+                                 rounded-3xl shadow-2xl border border-white/10">
                 </a>
 
                 <div id="main-nav" class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-[11px] md:text-[12px] uppercase tracking-[0.15em] font-bold text-slate-400 flex-1">
@@ -81,11 +81,48 @@
                 </p>
             </div>
         </header>
+
+        <div id="dynamic-portfolio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+        </div>
     </main>
 
     <footer class="p-10 text-center text-slate-600 text-[10px] uppercase tracking-[0.4em] opacity-50 border-t border-white/5">
         &copy; 2026 MebliVam
     </footer>
+
+    <div id="post-modal" class="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-900 border border-amber-500/30 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl shadow-amber-500/20">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-white text-xl font-black uppercase italic tracking-tighter">Нова публікація</h2>
+                <button onclick="togglePostModal()" class="text-slate-500 hover:text-white transition-colors text-3xl">&times;</button>
+            </div>
+            <form id="post-form" class="space-y-4">
+                <div>
+                    <label class="text-[10px] text-amber-500 font-black uppercase mb-1 block">Оберіть розділ</label>
+                    <select id="post-page" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-amber-500 transition-all uppercase font-bold cursor-pointer">
+                        <option value="kuhni">🍳 Кухні</option>
+                        <option value="spalnya">🛌 Спальні</option>
+                        <option value="peredpokii">🚪 Передпокої</option>
+                        <option value="vitalni">📺 Вітальні</option>
+                        <option value="shafy">🧥 Шафи</option>
+                        <option value="garderobni">👔 Гардеробні</option>
+                        <option value="dytyachi">🧸 Дитячі</option>
+                        <option value="sanvuzol">🚿 Санвузли</option>
+                    </select>
+                </div>
+                <input type="text" id="post-title" placeholder="НАЗВА ПРОЄКТУ" required class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-amber-500 transition-all uppercase font-bold">
+                <textarea id="post-desc" placeholder="ОПИС ОБ'ЄКТА" required rows="4" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-amber-500 transition-all uppercase font-light leading-relaxed"></textarea>
+                <div class="relative group">
+                    <input type="file" id="post-image" accept="image/*" required class="hidden">
+                    <label for="post-image" class="flex items-center justify-center gap-3 w-full bg-white/5 border-2 border-dashed border-white/10 rounded-xl px-4 py-6 text-slate-400 text-[10px] font-black uppercase cursor-pointer hover:bg-white/10 hover:border-amber-500/50 transition-all">
+                        <i class="fas fa-cloud-upload-alt text-xl text-amber-500"></i>
+                        <span id="post-file-name">Обрати фото об'єкта</span>
+                    </label>
+                </div>
+                <button type="submit" id="post-submit-btn" class="w-full bg-amber-500 hover:bg-amber-400 py-4 rounded-xl text-black font-black uppercase italic tracking-tighter transition-all shadow-lg shadow-amber-500/20 mt-4">Опублікувати на сайті</button>
+            </form>
+        </div>
+    </div>
 
     <script type="module" src="js/reviews.js"></script>
     <script src="js/script.js"></script>
