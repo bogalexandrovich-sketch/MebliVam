@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB6cfj0rKRz2B_MgPrELJe8sFav942TrF0",
@@ -17,130 +17,252 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-const adminEmail = "alphacentavr.2012@gmail.com";
+window.getAuth = getAuth;
+window.signInWithPopup = signInWithPopup;
+window.GoogleAuthProvider = GoogleAuthProvider;
+
+// КОНФІГУРАЦІЯ
+const DB_TABLE_URL = "https://docs.google.com/spreadsheets/d/132o4JFFRBOPW-T55ZD67ugqv9ufxxfjRvOODXnFn5Vs/edit?usp=sharing";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec";
 const IMGBB_API_KEY = "fed56a153d831e2a13a70f3316ec1229";
 
-// Чиста назва поточної сторінки (index, kuhni, shafy тощо)
-const currentPage = window.location.pathname.split('/').pop().split('.')[0] || 'index';
+// --- ФУНКЦІЯ ВІДПРАВКИ В ТАБЛИЦЮ ---
+async function sendDataToSheets(payload) {
+    try {
+        await fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } catch (err) {
+        console.error("Sheets Error:", err);
+    }
+}
 
-// --- ГЛОБАЛЬНІ ФУНКЦІЇ ---
-window.togglePostModal = () => {
-    const modal = document.getElementById('post-modal');
-    if (modal) {
-        modal.classList.toggle('hidden');
-        // Автоматично виставляємо сторінку в селекті форми
-        const select = document.getElementById('post-page');
-        if (select) select.value = currentPage;
+// --- ФУНКЦІЯ ЗАВАНТАЖЕННЯ ФОТО (ImgBB) ---
+async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+        });
+        const result = await response.json();
+        return result.success ? result.data.url : null;
+    } catch (e) {
+        console.error("Помилка завантаження фото:", e);
+        return null;
+    }
+}
+
+// --- ФУНКЦІЇ АДМІНІСТРУВАННЯ ---
+window.deleteReview = async (reviewId) => {
+    if (confirm("Видалити цей відгук назавжди?")) {
+        try {
+            await deleteDoc(doc(db, "portfolio", reviewId));
+            alert("Відгук успішно видалено.");
+        } catch (error) {
+            console.error("Помилка видалення:", error);
+            alert("Помилка доступу або мережі.");
+        }
     }
 };
 
-window.login = () => signInWithPopup(auth, provider);
-window.logout = () => signOut(auth);
-
-window.deleteProject = async (id) => {
-    if (confirm("Видалити цей об'єкт з портфоліо?")) {
-        try { await deleteDoc(doc(db, "portfolio", id)); }
-        catch (err) { alert("Помилка видалення: " + err.message); }
+window.banUser = (userId) => {
+    if (confirm("Заблокувати цього автора?")) {
+        console.log("Забанено користувача з UID:", userId);
+        alert("Користувача додано до списку блокування (ID збережено в логах).");
     }
 };
 
-// --- АВТОРИЗАЦІЯ ТА ШАПКА ---
-onAuthStateChanged(auth, async (user) => {
-    const authSection = document.getElementById('auth-section');
-    const mainLogo = document.getElementById('main-logo') || document.querySelector('nav a');
-    if (!authSection) return;
+// --- УПРАВЛІННЯ СТАНОМ АВТОРИЗАЦІЇ ---
+onAuthStateChanged(auth, (user) => {
+    const authHeader = document.getElementById('auth-section');
+    const authFooter = document.getElementById('auth-section-footer');
+    const commentsWrapper = document.getElementById('comments-wrapper');
 
     if (user) {
-        if (mainLogo) mainLogo.classList.add('max-md:hidden');
-        const isAdmin = user.email === adminEmail;
-        authSection.innerHTML = `
-        <div class="flex items-center gap-3 bg-black/40 backdrop-blur-xl p-1.5 rounded-full border ${isAdmin ? 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : 'border-white/10'} shadow-xl">
-        <img src="${user.photoURL}" class="w-8 h-8 rounded-full border-2 ${isAdmin ? 'border-amber-500' : 'border-white/20'}">
-        <div class="hidden md:flex flex-col text-left leading-none">
-        <span class="text-white text-[9px] font-black uppercase tracking-tighter">${user.displayName.split(' ')[0]}</span>
-        <span class="${isAdmin ? 'text-amber-500' : 'text-blue-400'} text-[7px] font-black uppercase tracking-widest">${isAdmin ? 'ГОЛОВНИЙ' : 'КЛІЄНТ'}</span>
+        sendDataToSheets({ type: "auth", name: user.displayName, email: user.email });
+
+        if (commentsWrapper) commentsWrapper.classList.remove('hidden');
+
+        const isAdmin = user.email === "alphacentavr.2012@gmail.com";
+        const adminDbBtn = isAdmin ? `
+        <a href="${DB_TABLE_URL}" target="_blank"
+        class="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl hover:bg-amber-500/20 transition-all duration-300 mr-4 group/btn shadow-lg">
+        <i class="fas fa-database text-amber-500 text-[10px] group-hover/btn:rotate-12 transition-transform"></i>
+        <span class="text-[9px] text-amber-500 font-black uppercase tracking-widest">База</span>
+        </a>
+        ` : '';
+
+        const userHtml = `
+        <div class="flex items-center gap-4 group animate-fade-in">
+        ${adminDbBtn}
+        <div class="relative">
+        <img src="${user.photoURL}" alt="${user.displayName}"
+        class="w-10 h-10 rounded-full border-2 border-amber-500/30 group-hover:border-amber-500 transition-all duration-500 shadow-2xl">
+        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-slate-900 rounded-full shadow-lg"></div>
         </div>
-        <div class="flex items-center gap-2 ml-1 pr-1">
-        ${isAdmin ? `<button onclick="togglePostModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 rounded-lg text-black text-[9px] font-black uppercase transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap">➕ ДОДАТИ ОБ'ЄКТ</button>` : ""}
-        <button onclick="logout()" class="p-1 text-white/30 hover:text-red-500 transition-all"><i class="fas fa-power-off text-xs"></i></button>
+        <div class="flex flex-col text-left">
+        <span class="text-[10px] text-white font-black uppercase tracking-[0.2em] leading-none mb-1.5">${user.displayName}</span>
+        <button onclick="getAuth().signOut()"
+        class="text-[8px] text-amber-500/40 hover:text-red-500 font-black uppercase tracking-[0.25em] transition-all duration-300 flex items-center gap-1">
+        <i class="fas fa-sign-out-alt"></i> Вийти
+        </button>
         </div>
         </div>`;
+
+        if (authHeader) authHeader.innerHTML = userHtml;
+        if (authFooter) authFooter.innerHTML = userHtml;
     } else {
-        if (mainLogo) mainLogo.classList.remove('max-md:hidden');
-        authSection.innerHTML = `<button onclick="login()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-full font-black uppercase text-[9px] text-white transition-all shadow-lg shadow-blue-600/20">УВІЙТИ</button>`;
+        if (commentsWrapper) commentsWrapper.classList.add('hidden');
+
+        const loginBtn = `
+        <button onclick="const p = new GoogleAuthProvider(); signInWithPopup(getAuth(), p)"
+        class="group relative px-8 py-3.5 bg-slate-900/50 border border-white/5 rounded-full overflow-hidden transition-all duration-500 hover:border-amber-500/40">
+        <span class="text-[10px] text-slate-400 group-hover:text-white font-black uppercase tracking-[0.25em]">Увійти через Google</span>
+        </button>`;
+
+        if (authHeader) authHeader.innerHTML = loginBtn;
+        if (authFooter) authFooter.innerHTML = loginBtn;
     }
 });
 
-// --- ЛОГІКА CMS ---
-const postForm = document.getElementById('post-form');
-if (postForm) {
-    postForm.addEventListener('submit', async (e) => {
+// --- ВІДПРАВКА ФОРМИ ---
+const reviewForm = document.getElementById('review-form');
+if (reviewForm) {
+    reviewForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('post-submit-btn');
-        const imageInput = document.getElementById('post-image');
-        if (!imageInput.files[0]) return alert("Спершу обери фото!");
+        const submitBtn = document.getElementById('review-submit-btn');
+        const fileInput = document.getElementById('review-image');
 
-        btn.disabled = true;
-        btn.textContent = "ЗАВАНТАЖЕННЯ...";
+        submitBtn.disabled = true;
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = `<i class="fas fa-sync-alt animate-spin mr-2"></i> Обробка...`;
 
         try {
-            const formData = new FormData();
-            formData.append("image", imageInput.files[0]);
-            const imgRes = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
-            const imgJson = await imgRes.json();
-            if (!imgJson.success) throw new Error("Помилка ImgBB");
+            let uploadedImageUrl = null;
+            if (fileInput.files[0]) {
+                uploadedImageUrl = await uploadImage(fileInput.files[0]);
+            }
 
             await addDoc(collection(db, "portfolio"), {
-                page: document.getElementById('post-page').value,
-                         title: document.getElementById('post-title').value,
-                         desc: document.getElementById('post-desc').value,
-                         image: imgJson.data.url,
-                         timestamp: serverTimestamp()
+                page: "vidguky",
+                title: document.getElementById('selected-rating').value,
+                         desc: document.getElementById('review-text').value,
+                         name: auth.currentUser.displayName,
+                         photo: auth.currentUser.photoURL,
+                         userId: auth.currentUser.uid,
+                         reviewImage: uploadedImageUrl,
+                         timestamp: serverTimestamp(),
+                         verified: true
             });
 
-            alert("ОПУБЛІКОВАНО УСПІШНО!");
-            window.togglePostModal();
-            postForm.reset();
-            document.getElementById('post-file-name').textContent = "Обрати фото об'єкта";
-        } catch (err) { alert("Помилка: " + err.message); }
-        finally {
-            btn.disabled = false;
-            btn.textContent = "ОПУБЛІКУВАТИ НА САЙТІ";
-        }
-    });
+            sendDataToSheets({
+                type: "comment",
+                name: auth.currentUser.displayName,
+                email: auth.currentUser.email,
+                comment: document.getElementById('review-text').value,
+                             rating: document.getElementById('selected-rating').value
+            });
 
-    document.getElementById('post-image')?.addEventListener('change', (e) => {
-        const fileName = e.target.files[0] ? e.target.files[0].name : "Обрати фото об'єкта";
-        document.getElementById('post-file-name').textContent = fileName;
+            reviewForm.reset();
+            const fileLabel = document.getElementById('file-chosen');
+            if (fileLabel) fileLabel.textContent = '';
+            alert("Ваш відгук успішно опубліковано!");
+
+        } catch (error) {
+            console.error("Помилка:", error);
+            alert("Сталася помилка при збереженні.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalContent;
+        }
     });
 }
 
-// --- ВІДОБРАЖЕННЯ КАРТОК ---
-const grid = document.getElementById('dynamic-portfolio-grid') || document.querySelector('main .grid');
-if (grid) {
-    onSnapshot(query(collection(db, "portfolio"), where("page", "==", currentPage), orderBy("timestamp", "desc")), (snap) => {
-        document.querySelectorAll('.dynamic-card').forEach(el => el.remove());
-        let newCardsHTML = "";
-        snap.forEach((postDoc) => {
-            const data = postDoc.data();
-            const isAdmin = auth.currentUser?.email === adminEmail;
-            newCardsHTML += `
-            <div class="dynamic-card group relative bg-zinc-900/50 rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-amber-500/30 transition-all duration-500 shadow-2xl">
-            <div class="aspect-square overflow-hidden relative">
-            <img src="${data.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
-            ${isAdmin ? `<button onclick="window.deleteProject('${postDoc.id}')" class="absolute top-4 right-4 bg-red-600/80 hover:bg-red-600 text-white p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-all z-10 shadow-lg"><i class="fas fa-trash-alt"></i></button>` : ""}
-            </div>
-            <div class="p-8 relative">
-            <h3 class="text-white text-xl font-black uppercase italic tracking-tighter mb-3 leading-none">${data.title}</h3>
-            <p class="text-slate-400 text-xs font-light leading-relaxed uppercase tracking-widest">${data.desc}</p>
-            <div class="mt-6 flex items-center gap-2 border-t border-white/5 pt-4">
-            <span class="text-amber-500 text-[8px] font-black uppercase tracking-[0.3em] italic">MebliVam Portfolio</span>
-            </div>
-            </div>
+// --- ВІДОБРАЖЕННЯ ВІДГУКІВ ---
+const reviewsContainer = document.getElementById('reviews-container');
+if (reviewsContainer) {
+    const q = query(
+        collection(db, "portfolio"),
+                    where("page", "==", "vidguky"),
+                    orderBy("timestamp", "desc")
+    );
+
+    onSnapshot(q, (snapshot) => {
+        reviewsContainer.innerHTML = "";
+
+        if (snapshot.empty) {
+            reviewsContainer.innerHTML = `
+            <div class="col-span-full text-center py-24 bg-slate-900/20 border-2 border-dashed border-white/5 rounded-[3rem]">
+            <p class="text-slate-600 text-[10px] uppercase font-black tracking-[0.4em]">Наразі відгуків немає.</p>
             </div>`;
+            return;
+        }
+
+        snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const id = docSnap.id;
+            const ts = data.timestamp ? new Date(data.timestamp.seconds * 1000) : new Date();
+            const formattedDate = ts.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            const isAdmin = auth.currentUser && auth.currentUser.email === "alphacentavr.2012@gmail.com";
+
+            const adminTools = isAdmin ? `
+            <div class="flex items-center gap-3 ml-4 pl-4 border-l border-white/10">
+            <button onclick="deleteReview('${id}')" title="Видалити"
+            class="w-9 h-9 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 shadow-lg shadow-red-500/5">
+            <i class="fas fa-trash-alt text-xs"></i>
+            </button>
+            <button onclick="banUser('${data.userId}')" title="Забанити"
+            class="w-9 h-9 flex items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 shadow-lg shadow-orange-500/5">
+            <i class="fas fa-user-slash text-xs"></i>
+            </button>
+            </div>
+            ` : '';
+
+            reviewsContainer.innerHTML += `
+            <article class="group relative bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 md:p-12 shadow-2xl backdrop-blur-md mb-8 hover:border-amber-500/20 transition-all duration-700">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-10">
+            <div class="flex items-center gap-5">
+            <img src="${data.photo}" class="w-14 h-14 rounded-full border-2 border-amber-500/10 shadow-xl group-hover:scale-110 transition-transform duration-500">
+            <div>
+            <h4 class="text-white text-xs md:text-sm font-black uppercase tracking-[0.2em] mb-1.5">${data.name}</h4>
+            <div class="flex items-center gap-3">
+            <span class="text-3xl filter drop-shadow-md">${data.title}</span>
+            <span class="text-[9px] text-slate-600 font-bold uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">${formattedDate}</span>
+            </div>
+            </div>
+            </div>
+
+            <div class="shrink-0 flex items-center gap-3 px-5 py-2.5 bg-slate-950/40 rounded-2xl border border-white/5 shadow-inner">
+            <div class="flex items-center gap-2.5">
+            <div class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+            <span class="text-[9px] text-amber-500 font-black uppercase tracking-[0.2em]">Верифіковано</span>
+            </div>
+            ${adminTools}
+            </div>
+            </div>
+
+            <div class="relative mb-8">
+            <i class="fas fa-quote-left absolute -top-6 -left-4 text-amber-500/5 text-6xl"></i>
+            <p class="text-slate-400 text-sm md:text-base font-light italic leading-relaxed relative z-10 pl-8 border-l border-white/5">
+            ${data.desc}
+            </p>
+            </div>
+
+            ${data.reviewImage ? `
+                <div class="mt-10 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                <img src="${data.reviewImage}" class="w-full max-h-[500px] object-cover hover:scale-105 transition-transform duration-[1.5s]">
+                </div>` : ''}
+
+                <div class="absolute bottom-6 right-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <span class="text-[8px] text-slate-700 font-black uppercase tracking-[0.5em]">MebliVam Portfolio 2026</span>
+                </div>
+                </article>`;
         });
-        if (grid.children.length >= 1) grid.children[0].insertAdjacentHTML('afterend', newCardsHTML);
-        else grid.innerHTML = newCardsHTML;
     });
 }
