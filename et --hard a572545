@@ -1,0 +1,69 @@
+[33mc91cddf[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m додав зв'язок
+[33m0b46e9c[m додав зв'язок
+[33m4120aa6[m додав зв'язок
+[33m65e0b28[m додав зв'язок
+[33m0ba8fbe[m додав зв'язок
+[33m680b85b[m додав зв'язок
+[33m14e4eff[m додав SEO
+[33m17a899e[m додав SEO
+[33m333a1e9[m додав SEO
+[33mff1efb5[m додав SEO
+[33mc04cae3[m додав нову роботу
+[33mfb48872[m додав стиль для телефону
+[33mfd65729[m виправив вікно відгуків
+[33m522ec8c[m додав нову роботу
+[33mc5b9346[m додав нову роботу
+[33m1644ed3[m додав нову роботу
+[33ma572545[m feat: added ban and delete buttons for single replies
+[33mce12dcb[m fix: trigger github pages rebuild
+[33m9dc00ef[m fix: trigger github pages rebuild
+[33m5d26c4b[m реклама для неавторизованих
+[33m7a4a325[m реклама для неавторизованих
+[33m1f2a438[m ban
+[33m5d18fb4[m реклама для неавторизованих
+[33m7a55ec8[m реклама для неавторизованих
+[33m49e6929[m Update reviews logic and UI: added analytics and security description
+[33mc02f0d2[m Update reviews logic and UI: added analytics and security description
+[33ma5ec7da[m Update reviews logic and UI: added analytics and security description
+[33m82ff805[m Update reviews logic and UI: added analytics and security description
+[33m9c32c22[m Оновлено посилання на базу в reviews.js
+[33m9308fd9[m Оновлено посилання на базу в reviews.js
+[33mf56955a[m Fix telegram link on all pages using sed
+[33m7028edb[m ДОДАОИ РЕКЛАМУ НА СТОРІНКИ
+[33m701fd25[m Add promotional banners for all furniture categories and update project cards
+[33meac0066[m Fixed swipe conflict with zoom in gallery
+[33mc73e20a[m Fixed swipe conflict with zoom in gallery
+[33m17d17a9[m Fixed swipe conflict with zoom in gallery
+[33mf8d1096[m Fixed swipe conflict with zoom in gallery
+[33ma89f0d2[m Fixed swipe conflict with zoom in gallery
+[33m6692373[m Fixed swipe conflict with zoom in gallery
+[33m779a5e0[m Fixed swipe conflict with zoom in gallery
+[33m7fb7bb2[m Fixed swipe conflict with zoom in gallery
+[33m763b02c[m Додав сторінку контактів
+[33mf18554e[m Додав сторінку контактів
+[33mfbf2494[m Додав збір бази імейлів та видалення відповідей для адміна
+[33m233666e[m Додав збір бази імейлів та видалення відповідей для адміна
+[33ma4506fa[m Add likes, dislikes and multi-reply system
+[33md743923[m Повернення до робочої версії reviews.js від 10.05
+[33m309cb02[m fix: додано API key
+[33m3ef11f3[m fix: додано API key
+[33ma63e738[m fix: додано API key
+[33m8e9e834[m fix: додано API key
+[33m8e7c1b5[m fix: додано API key
+[33m180f0ba[m fix: додано API key
+[33mb318e85[m fix: додано редирект для мобільної авторизації
+[33m732561e[m fix: додано редирект для мобільної авторизації
+[33m61c3acf[m Додано повноцінну систему відгуків з Firestore та адмін-панель
+[33m1ad6619[m Додано повноцінну систему відгуків з Firestore та адмін-панель
+[33m0bbd91e[m Додано повноцінну систему відгуків з Firestore та адмін-панель
+[33mb3281a0[m Додано повноцінну систему відгуків з Firestore та адмін-панель
+[33m5dadc96[m feat: додано свайпи, анімацію перемикання фото та оптимізовано стилі
+[33m6a9679f[m style: оновлення стилів та додавання свайпів у галерею
+[33m4a74515[m Додано Google Analytics G-LMFTZT2M62 на всі сторінки
+[33m57db84e[m Оптимізація зображень: знижено якість та додано вотермарки
+[33m0f69631[m Повне оновлення структури сайту та фото з вотермарками
+[33me6df18f[m Додав захист від копіювання для мобільних пристроїв
+[33md5f2bdb[m Прибрав чернетки (папки з цифрами)
+[33m811ba1d[m Відновлення домену
+[33m23b52a2[m порожній пуш
+[33mc3b6b86[m Initial clean commit without videos
