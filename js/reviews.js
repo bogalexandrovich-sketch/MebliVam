@@ -63,25 +63,6 @@ window.banUser = (userId) => {
     }
 };
 
-window.voteReview = async (docId, type) => {
-    if (!auth.currentUser) return alert("Увійдіть для голосування");
-    const docRef = doc(db, "portfolio", docId);
-    const docSnap = await getDoc(docRef);
-    const data = docSnap.data();
-    const voters = data.voters || {};
-    if (voters[auth.currentUser.uid] === type) return;
-
-    const update = { voters: { ...voters, [auth.currentUser.uid]: type } };
-    if (type === 'likes') {
-        update.likes = increment(1);
-        if (voters[auth.currentUser.uid] === 'dislikes') update.dislikes = increment(-1);
-    } else {
-        update.dislikes = increment(1);
-        if (voters[auth.currentUser.uid] === 'likes') update.likes = increment(-1);
-    }
-    await updateDoc(docRef, update);
-};
-
 // --- CRUD КОМЕНТАРІВ ---
 window.deleteComment = async (reviewId, commentId) => {
     if (!confirm("Видалити цей коментар назавжди?")) return;
@@ -276,10 +257,7 @@ if (reviewForm) {
                          userId: auth.currentUser.uid,
                          reviewImage: uploadedImageUrl,
                          timestamp: serverTimestamp(),
-                         verified: true,
-                         likes: 0,
-                         dislikes: 0,
-                         voters: {}
+                         verified: true
             });
             sendDataToSheets({
                 type: "comment",
@@ -354,12 +332,6 @@ if (reviewsContainer) {
             </div>
 
             <div class="flex items-center gap-6 mb-8 border-t border-white/5 pt-6">
-            <button onclick="voteReview('${id}', 'likes')" class="flex items-center gap-2 text-slate-400 hover:text-green-500 transition-colors">
-            <span>👍</span> <span id="likes-${id}" class="text-xs font-bold">${data.likes || 0}</span>
-            </button>
-            <button onclick="voteReview('${id}', 'dislikes')" class="flex items-center gap-2 text-slate-400 hover:text-red-500 transition-colors">
-            <span>👎</span> <span id="dislikes-${id}" class="text-xs font-dislikes">${data.dislikes || 0}</span>
-            </button>
             <button onclick="toggleComments('${id}')" class="flex items-center gap-2 text-amber-500 hover:text-white transition-colors">
             <span>💬</span> <span class="text-xs font-bold">Відповісти</span>
             </button>
