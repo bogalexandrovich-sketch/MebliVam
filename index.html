@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🇺🇦 Меблі на замовлення під ключ | MebliVam</title>
-    <meta name="description" content="Професійне виготовлення корпусних меблів на замовлення. Кухні, шафи-купе, вітальні та спальні за індивідуальними проєктами. Меблі під ключ від MebliVam.">
-    <meta property="og:title" content="Меблі на замовлення під ключ | MebliVam">
-    <meta property="og:description" content="Професійне виготовлення корпусних меблів за індивідуальними проєктами. Від заміру до встановлення.">
+
+    <meta name="description" content="Професійне виготовлення корпусних меблів на замовлення в Києві та області. Кухні, шафи-купе, вітальні, дитячі, гардеробні, шафи та спальні за індивідуальними проєктами. Меблі під ключ від MebliVam.">
+
+    <meta name="keywords" content="меблі на замовлення, меблі на ваш смак, меблі за дизайн проєктом, купити меблі Київ, меблі на замовлення безпечні та сертифіковані матеріали. Якість перевірена роками!">
+
+    <meta property="og:title" content="Меблі на замовлення під ключ Київ | MebliVam">
+    <meta property="og:description" content="Професійне виготовлення корпусних меблів за індивідуальними проєктами Київ. Від заміру до встановлення. Київ">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://meblivam.pp.ua/">
     <meta property="og:image" content="https://meblivam.pp.ua/assets/images/logo-meblivam.png">
@@ -164,6 +168,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // ... твій існуючий код для меню ...
             const menuBtn = document.getElementById('mobile-menu-btn');
             const menuContent = document.getElementById('mobile-menu-content');
 
@@ -173,6 +178,14 @@
                     menuContent.classList.toggle('flex');
                 });
             }
+
+            // --- ДОДАЙ ЦЕЙ БЛОК ---
+            window.calculateFurniture = function(area) {
+                const avgMaterialPrice = 875;
+                const coefficient = 1.8;
+                return Math.round(area * avgMaterialPrice * coefficient);
+            };
+            // ----------------------
         });
     </script>
 </body>
