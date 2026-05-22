@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
 Sitemap: https://meblivam.pp.ua/sitemap.xml
