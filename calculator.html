@@ -11,30 +11,6 @@
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden bg-slate-950">
 
-    <nav class="dark-glass sticky top-0 z-50 shadow-2xl">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col lg:flex-row justify-between items-center py-4 gap-6">
-                <a href="index.html">
-                    <img src="assets/images/logo-meblivam.png" alt="MebliVam Logo" class="h-20 md:h-24 w-auto rounded-3xl shadow-2xl border border-white/10">
-                </a>
-                <div id="main-nav" class="flex flex-wrap justify-center items-center gap-6 text-[12px] uppercase tracking-[0.15em] font-bold text-slate-400">
-                    <a href="calculator.html" class="text-amber-500 border-b-2 border-amber-500/50">🧮Калькулятор</a>
-                    <<a href="index.html" class="nav-link hover:text-white transition-colors">🏠Про нас</a>
-                    <a href="kuhni.html" class="text-amber-500 border-b-2 border-amber-500/50">🍳Кухня</a>
-                    <a href="spalnya.html" class="nav-link hover:text-white transition-colors">🛌Спальня</a>
-                    <a href="peredpokii.html" class="nav-link hover:text-white transition-colors">🚪Передпокій</a>
-                    <a href="vitalni.html" class="nav-link hover:text-white transition-colors">📺Вітальня</a>
-                    <a href="shafy.html" class="nav-link hover:text-white transition-colors">🧥Шафа</a>
-                    <a href="garderobni.html" class="nav-link hover:text-white transition-colors">👔Гардеробна</a>
-                    <a href="dytyachi.html" class="nav-link hover:text-white transition-colors">🧸Дитяча</a>
-                    <a href="sanvuzol.html" class="nav-link hover:text-white transition-colors">🚿Сан. Вузол</a>
-                    <a href="vidguky.html" class="nav-link hover:text-white transition-colors">💬Відгуки</a>
-                    <a href="contacts.html" class="nav-link hover:text-white transition-colors">📱Контакти</a>>
-                </div>
-            </div>
-        </div>
-    </nav>
-
     <main class="flex-grow max-w-3xl mx-auto px-4 py-16 w-full">
         <header class="mb-12 border-l-4 border-amber-500 pl-6">
             <h2 class="text-4xl md:text-6xl font-black text-white uppercase italic tracking-tighter">Розрахунок вартості</h2>
@@ -42,6 +18,21 @@
         </header>
 
         <form id="furniture-calc-form" class="space-y-8 bg-slate-900/40 border border-white/5 p-8 md:p-12 rounded-[2.5rem] shadow-2xl" onsubmit="event.preventDefault();">
+
+            <div class="mb-8">
+                <label class="block text-white text-[11px] font-black uppercase tracking-widest mb-4">Оберіть тип меблів</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button type="button" class="calc-cat-btn bg-amber-500 text-slate-950 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all">Кухня</button>
+                    <button type="button" class="calc-cat-btn bg-slate-950/60 border border-white/10 text-slate-400 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all hover:border-amber-500/30">Шафа</button>
+                    <button type="button" class="calc-cat-btn bg-slate-950/60 border border-white/10 text-slate-400 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all hover:border-amber-500/30">Вітальня</button>
+                    <button type="button" class="calc-cat-btn bg-slate-950/60 border border-white/10 text-slate-400 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all hover:border-amber-500/30">Дитяча</button>
+                    <button type="button" class="calc-cat-btn bg-slate-950/60 border border-white/10 text-slate-400 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all hover:border-amber-500/30">Передпокій</button>
+                    <button type="button" class="calc-cat-btn bg-slate-950/60 border border-white/10 text-slate-400 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all hover:border-amber-500/30">Спальня</button>
+                    <button type="button" class="calc-cat-btn bg-slate-950/60 border border-white/10 text-slate-400 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all hover:border-amber-500/30">Сан. Вузол</button>
+                    <button type="button" class="calc-cat-btn bg-slate-950/60 border border-white/10 text-slate-400 p-4 rounded-2xl text-[10px] font-bold uppercase transition-all hover:border-amber-500/30">Гардеробна</button>
+                </div>
+            </div>
+
             <div>
                 <label class="block text-white text-[11px] font-black uppercase mb-3">Довжина (м.п.)</label>
                 <input type="number" id="calc-length" step="0.1" value="1" class="w-full bg-slate-950/60 text-white border border-white/10 rounded-2xl px-5 py-4 text-sm outline-none">
@@ -91,6 +82,7 @@
             </button>
         </form>
     </main>
+
     <script src="js/calculator.js"></script>
 </body>
 </html>
