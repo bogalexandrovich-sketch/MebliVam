@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const calcBtn = document.getElementById('calc-submit-btn');
     const priceOutput = document.getElementById('calc-price-output');
 
-    // Змінна для зберігання поточної категорії (за замовчуванням "Кухня")
     let activeCategory = 'Кухня';
 
     const prices = {
@@ -15,8 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
             'dsp': 1600, 'dsp-pur': 2200, 'mdf-film': 3800,
             'mdf-paint': 6800, 'mdf-milled': 8800, 'mdf-veneer': 13500
         },
-        worktop_mp: { std28: 1500, std38: 2200, h2o38: 3200, hpl38: 6500, compact12: 11000 },
-        baseCostPerMeter: 10500
+        worktop_mp: {
+            'dsp28': 1200,
+            'dsp38': 1200,
+            'compact12': 4400,
+            'fenix': 18400
+        },
+        baseCostPerMeter: 10500,
+        cabinetPrice: 1500
     };
 
     const categorySettings = {
@@ -38,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return count;
     }
 
-    // Логіка перемикання кнопок та оновлення категорії
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('calc-cat-btn')) {
             document.querySelectorAll('.calc-cat-btn').forEach(b => {
@@ -47,8 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             e.target.classList.add('bg-amber-500', 'text-slate-950');
             e.target.classList.remove('bg-slate-950/60', 'text-slate-400');
-
-            // Оновлюємо змінну
             activeCategory = e.target.innerText;
         }
     });
@@ -56,30 +58,46 @@ document.addEventListener('DOMContentLoaded', () => {
     calcBtn.addEventListener('click', () => {
         const settings = categorySettings[activeCategory] || categorySettings['Кухня'];
 
-        const brand = document.getElementById('calc-hardware')?.value;
+        // Отримання значень
+        const brand = document.getElementById('calc-hardware')?.value || 'giff';
         const length = parseFloat(document.getElementById('calc-length')?.value) || 0;
-        const facadeType = document.getElementById('calc-facade')?.value;
-        const worktopType = document.getElementById('calc-worktop')?.value || 'std28';
+        const facadeType = document.getElementById('calc-facade')?.value || 'dsp';
+
+        const upperCount = parseInt(document.getElementById('calc-upper-cabinets')?.value) || 0;
+        const lowerCount = parseInt(document.getElementById('calc-lower-cabinets')?.value) || 0;
+        const countertopLengthMm = parseFloat(document.getElementById('calc-countertop')?.value) || 0;
+        const worktopType = document.getElementById('calc-countertop-material')?.value || 'dsp28';
+
         const countDrawers = parseInt(document.getElementById('calc-drawers')?.value) || 0;
-        const facadeHeight = parseFloat(document.getElementById('calc-facade-height')?.value) || 0;
-        const facadeWidth = parseFloat(document.getElementById('calc-facade-width')?.value) || 0;
         const doorsCount = parseInt(document.getElementById('calc-doors')?.value) || 0;
 
+        // Висота фасадів (мм)
+        const facadeHeightLow = parseFloat(document.getElementById('calc-facade-height')?.value) || 0;
+        const facadeHeightHigh = parseFloat(document.getElementById('calc-facade-width')?.value) || 0;
+
         // 1. Фурнітура
-        const totalHinges = doorsCount * calculateHinges(facadeHeight, facadeWidth);
-        const totalHardware = (totalHinges * prices.hardware[brand].loop) +
-        (countDrawers * prices.hardware[brand].runner);
+        const hardwarePrices = prices.hardware[brand] || prices.hardware.giff;
+        // Беремо за ширину фасаду стандартно 500мм для розрахунку петель
+        const totalHinges = doorsCount * calculateHinges(facadeHeightLow > 0 ? facadeHeightLow : 700, 500);
+        const totalHardware = (totalHinges * hardwarePrices.loop) + (countDrawers * hardwarePrices.runner);
 
-        // 2. Фасади
-        const totalFacade = (length * 2.5) * (prices.facade_sqm[facadeType] || 0);
+        // 2. Фасади (Розрахунок площі в м²)
+        // Нижні (ширину беремо 600мм), Верхні (ширину беремо 400мм)
+        const areaLower = lowerCount * (facadeHeightLow * 600) / 1000000;
+        const areaUpper = upperCount * (facadeHeightHigh * 400) / 1000000;
+        const totalFacade = (areaLower + areaUpper) * (prices.facade_sqm[facadeType] || 0);
 
-        // 3. Стільниця (тільки якщо в налаштуваннях категорії hasWorktop: true)
-        const totalWorktop = settings.hasWorktop ? (length * (prices.worktop_mp[worktopType] || 0)) : 0;
+        // 3. Стільниця
+        const totalWorktop = settings.hasWorktop ? (countertopLengthMm / 1000) * (prices.worktop_mp[worktopType] || 0) : 0;
 
-        // 4. База корпусу (множимо на baseMultiplier категорії)
-        const totalBase = length * prices.baseCostPerMeter * settings.baseMultiplier;
+        // 4. База корпусу + Тумби
+        const totalBase = (length * prices.baseCostPerMeter * settings.baseMultiplier) +
+        ((upperCount + lowerCount) * prices.cabinetPrice);
 
-        const total = totalHardware + totalFacade + totalWorktop + totalBase;
+        // 5. Фінальний розрахунок з коефіцієнтом
+        let total = totalHardware + totalFacade + totalWorktop + totalBase;
+        const coefficient = 1.8;
+        total = total * coefficient;
 
         priceOutput.innerText = `${Math.round(total).toLocaleString('uk-UA')} грн`;
     });
