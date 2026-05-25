@@ -192,6 +192,13 @@ onAuthStateChanged(auth, (user) => {
 
     if (user) {
         sendDataToSheets({ type: "auth", name: user.displayName, email: user.email });
+
+        // Синхронізація для калькулятора
+        localStorage.setItem('currentUserData', JSON.stringify({
+            name: user.displayName,
+            email: user.email
+        }));
+
         if (commentsWrapper) commentsWrapper.classList.remove('hidden');
 
         const isAdmin = user.email === "alphacentavr.2012@gmail.com";
@@ -222,6 +229,9 @@ onAuthStateChanged(auth, (user) => {
         if (authHeader) authHeader.innerHTML = userHtml;
         if (authFooter) authFooter.innerHTML = userHtml;
     } else {
+        // Очищення даних при виході
+        localStorage.removeItem('currentUserData');
+
         if (commentsWrapper) commentsWrapper.classList.add('hidden');
         const loginBtn = `
         <button onclick="const p = new GoogleAuthProvider(); signInWithPopup(getAuth(), p)"

@@ -33,3 +33,26 @@ window.addEventListener('scroll', () => {
         btn.classList.add('opacity-0', 'pointer-events-none');
     }
 });
+.nav-btn {
+    padding: 14px 20px;
+    text-align: left;
+    color: #94a3b8;
+    background: transparent;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+}
+
+.nav-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-btn.active {
+    color: #f59e0b; /* amber-500 */
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid #f59e0b;
+}
