@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇺🇦 Блог про меблі та дизайн | MebliVam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%2318181b%22/><text x=%2250%25%22 y=%2254%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial, sans-serif%22 font-weight=%22900%22 font-style=%22italic%22 font-size=%2265%22 fill=%22%23f59e0b%22>M</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col overflow-x-hidden bg-slate-950 text-slate-100">
+
+    <nav class="dark-glass sticky top-0 z-50 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row justify-between items-center py-4 gap-6">
+                <div class="flex justify-between items-center w-full lg:w-auto">
+                    <a href="index.html" class="block shrink-0 py-0">
+                        <img src="assets/images/logo-meblivam.png" alt="MebliVam Logo" class="h-20 md:h-24 w-auto object-contain hover:scale-[1.02] transition-transform duration-300 brightness-110 rounded-3xl shadow-2xl border border-white/10">
+                    </a>
+                    <button id="mobile-menu-btn" class="lg:hidden text-white text-2xl p-2 border border-white/20 rounded-xl hover:bg-white/10 transition-colors">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+
+                <div id="mobile-menu-content" class="hidden lg:flex flex-col lg:flex-row items-center w-full lg:w-auto gap-6 transition-all duration-300">
+                    <div id="main-nav" class="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-[11px] md:text-[12px] uppercase tracking-[0.15em] font-bold text-slate-400">
+                        <a href="index.html" class="nav-link hover:text-white transition-colors">🏠Про нас</a>
+                        <a href="kuhni.html" class="nav-link hover:text-white transition-colors">🍳Кухня</a>
+                        <a href="spalnya.html" class="nav-link hover:text-white transition-colors">🛌Спальня</a>
+                        <a href="peredpokii.html" class="nav-link hover:text-white transition-colors">🚪Передпокій</a>
+                        <a href="vitalni.html" class="nav-link hover:text-white transition-colors">📺Вітальня</a>
+                        <a href="shafy.html" class="nav-link hover:text-white transition-colors">🧥Шафа</a>
+                        <a href="garderobni.html" class="nav-link hover:text-white transition-colors">👔Гардеробна</a>
+                        <a href="dytyachi.html" class="nav-link hover:text-white transition-colors">🧸Дитяча</a>
+                        <a href="sanvuzol.html" class="nav-link hover:text-white transition-colors">🚿Сан. Вузол</a>
+                        <a href="vidguky.html" class="nav-link hover:text-white transition-colors">💬Відгуки</a>
+                        <a href="contacts.html" class="nav-link hover:text-white transition-colors">📱Контакти</a>
+                        <a href="blog.html" class="text-amber-500 border-b-2 border-amber-500/50">📰Блог</a>
+                    </div>
+                    <div id="auth-section" class="shrink-0 lg:ml-4 lg:border-l border-white/10 lg:pl-4 min-h-[40px] flex items-center justify-center w-full lg:w-auto">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+
+        <header class="mb-16 border-l-4 border-amber-500 pl-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div>
+                <h2 class="text-5xl md:text-7xl font-black text-white uppercase italic tracking-tighter leading-none">Блог Експерта</h2>
+                <p class="text-slate-500 mt-4 text-xs font-light uppercase tracking-widest">Корисні статті, кейси та поради зі світу меблів</p>
+            </div>
+            <button id="admin-create-post-btn" class="hidden px-6 py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-2xl text-xs uppercase tracking-widest transition-all shadow-xl shadow-amber-500/10">
+                <i class="fas fa-plus mr-2"></i> Нова публікація
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
+
+            <aside class="lg:sticky lg:top-32 bg-slate-900/40 border border-white/5 p-6 rounded-3xl backdrop-blur-md">
+                <h3 class="text-white text-xs font-black uppercase tracking-[0.2em] mb-6 pb-3 border-b border-white/10">Категорії блогу</h3>
+                <div id="blog-categories-list" class="flex flex-col gap-2">
+                    <button data-category="all" class="category-filter-btn text-left px-4 py-3 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold uppercase tracking-wider transition-all">
+                        ✨ Усі публікації
+                    </button>
+                    <button data-category="tips" class="category-filter-btn text-left px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-slate-400 hover:text-white hover:border-amber-500/30 text-xs font-bold uppercase tracking-wider transition-all">
+                        💡 Поради експерта
+                    </button>
+                    <button data-category="cases" class="category-filter-btn text-left px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-slate-400 hover:text-white hover:border-amber-500/30 text-xs font-bold uppercase tracking-wider transition-all">
+                        🛠 Наш досвід / Кейси
+                    </button>
+                    <button data-category="trends" class="category-filter-btn text-left px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-slate-400 hover:text-white hover:border-amber-500/30 text-xs font-bold uppercase tracking-wider transition-all">
+                        🎨 Тренди та Дизайн
+                    </button>
+                    <button data-category="materials" class="category-filter-btn text-left px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 text-slate-400 hover:text-white hover:border-amber-500/30 text-xs font-bold uppercase tracking-wider transition-all">
+                        🔩 Матеріали та Фурнітура
+                    </button>
+                </div>
+            </aside>
+
+            <section class="lg:col-span-3">
+                <div id="blog-loading" class="text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-amber-500 mb-4"></div>
+                    <p class="text-slate-500 text-xs uppercase tracking-widest">Завантаження публікацій...</p>
+                </div>
+
+                <div id="blog-posts-container" class="grid grid-cols-1 md:grid-cols-2 gap-8 hidden">
+                    </div>
+
+                <div id="blog-empty" class="hidden text-center py-12 bg-slate-900/20 border border-white/5 rounded-3xl">
+                    <p class="text-slate-400 text-sm italic">У цій категорії поки немає опублікованих статей.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="p-10 text-center text-slate-600 text-[10px] uppercase tracking-[0.4em] opacity-50 border-t border-white/5">
+        &copy; 2026 MebliVam
+    </footer>
+
+    <div id="admin-post-modal" class="hidden fixed inset-0 bg-slate-950/90 flex items-center justify-center z-50 p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 max-w-2xl w-full text-slate-200 shadow-2xl my-auto">
+            <h3 id="modal-title" class="text-2xl font-black text-amber-500 mb-6 uppercase italic tracking-wide">Нова публікація</h3>
+
+            <form id="admin-post-form" class="space-y-5">
+                <input type="hidden" id="edit-post-id"> <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Заголовок статті</label>
+                    <input type="text" id="post-title" required class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none text-white focus:border-amber-500/50">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Категорія</label>
+                        <select id="post-category" required class="w-full bg-slate-950/80 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none cursor-pointer focus:border-amber-500/50">
+                            <option value="tips">💡 Поради експерта</option>
+                            <option value="cases">🛠 Наш досвід / Кейси</option>
+                            <option value="trends">🎨 Тренди та Дизайн</option>
+                            <option value="materials">🔩 Матеріали та Фурнітура</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Обкладинка (Зображення)</label>
+                        <div class="relative w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-400 text-center cursor-pointer hover:border-amber-500/30">
+                            <input type="file" id="post-image-input" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                            <span id="post-image-label" class="truncate block">📷 Оберіть файл обкладинки</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Короткий опис (для картки в стрічці)</label>
+                    <textarea id="post-short-desc" required rows="2" class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none text-white focus:border-amber-500/50 resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Повний текст статті</label>
+                    <textarea id="post-full-content" required rows="8" class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none text-white focus:border-amber-500/50 font-light leading-relaxed"></textarea>
+                </div>
+
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" id="close-admin-modal-btn" class="flex-1 py-4 rounded-xl border border-white/10 text-slate-400 hover:bg-slate-800 text-xs font-bold uppercase tracking-wider transition-all">
+                        Скасувати
+                    </button>
+                    <button type="submit" id="save-post-btn" class="flex-1 py-4 rounded-xl bg-amber-500 text-slate-950 hover:bg-amber-400 font-black text-xs uppercase tracking-wider transition-all">
+                        Опублікувати
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="full-post-modal" class="hidden fixed inset-0 bg-slate-950/95 flex items-center justify-center z-50 p-4 backdrop-blur-md overflow-y-auto">
+        <div class="bg-slate-900 border border-white/5 rounded-[2.5rem] max-w-4xl w-full text-slate-200 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+
+            <div class="relative h-64 md:h-80 w-full rounded-t-[2.5rem] overflow-hidden bg-slate-950">
+                <img id="view-post-image" src="" alt="Post cover" class="w-full h-full object-cover opacity-60">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                <button id="close-view-modal-btn" class="absolute top-6 right-6 w-10 h-10 bg-black/60 hover:bg-amber-500 hover:text-slate-950 border border-white/10 rounded-full flex items-center justify-center text-white transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="absolute bottom-6 left-8 right-8">
+                    <span id="view-post-category" class="px-3 py-1 bg-amber-500 text-slate-950 text-[9px] font-black uppercase tracking-widest rounded-md"></span>
+                    <h3 id="view-post-title" class="text-2xl md:text-4xl font-black text-white uppercase italic tracking-tight mt-3 leading-tight"></h3>
+                    <p id="view-post-date" class="text-slate-400 text-[10px] uppercase tracking-wider mt-2 font-light"></p>
+                </div>
+            </div>
+
+            <div class="p-8 md:p-10 space-y-8">
+
+                <article id="view-post-content" class="text-slate-300 text-sm md:text-base font-light leading-relaxed whitespace-pre-line border-b border-white/5 pb-8">
+                    </article>
+
+                <div class="flex items-center justify-center gap-6 py-2 bg-slate-950/40 border border-white/5 rounded-2xl max-w-xs mx-auto">
+                    <button id="like-btn" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/5 hover:border-emerald-500/30 text-slate-400 hover:text-emerald-400 transition-all group">
+                        <i class="fas fa-thumbs-up text-lg group-hover:scale-110 transition-transform"></i>
+                        <span id="likes-count" class="font-bold text-sm">0</span>
+                    </button>
+                    <button id="dislike-btn" class="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/5 hover:border-rose-500/30 text-slate-400 hover:text-rose-400 transition-all group">
+                        <i class="fas fa-thumbs-down text-lg group-hover:scale-110 transition-transform"></i>
+                        <span id="dislikes-count" class="font-bold text-sm">0</span>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <h4 class="text-white text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2">
+                        <i class="fas fa-comments text-amber-500"></i> Обговорення статті (<span id="comments-count">0</span>)
+                    </h4>
+
+                    <form id="blog-comment-form" class="space-y-3">
+                        <div id="comment-textarea-wrapper">
+                            <textarea id="blog-comment-text" required rows="3" placeholder="Залиште свою думку щодо цієї статті..." class="w-full bg-slate-950/60 border border-white/10 rounded-xl px-4 py-3 text-sm outline-none text-white focus:border-amber-500/50 font-light resize-none"></textarea>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <p id="comment-auth-tip" class="text-[10px] text-slate-500 uppercase tracking-wider italic">Коментувати можуть лише авторизовані користувачі.</p>
+                            <button type="submit" id="send-comment-btn" class="px-6 py-3 bg-white text-slate-950 font-black rounded-xl text-[10px] uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg ml-auto">
+                                Надіслати
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="blog-comments-list" class="space-y-4 max-h-64 overflow-y-auto pr-2">
+                        </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/reviews.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/blog.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const menuContent = document.getElementById('mobile-menu-content');
+            if (menuBtn && menuContent) {
+                menuBtn.addEventListener('click', () => {
+                    menuContent.classList.toggle('hidden');
+                    menuContent.classList.toggle('flex');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
