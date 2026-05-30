@@ -125,10 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const imgUrl = post.imageUrl || 'assets/images/logo-meblivam.png';
 
-            // Перевіряємо стан лайка для цієї картки (зелений якщо лайкнув)
-            const userVote = (currentUser && post.voters && post.voters[currentUser.email]) ? post.voters[currentUser.email] : null;
-            const likeBtnClass = userVote === 'like' ? 'text-emerald-500 liked' : 'text-slate-400';
-
             const card = document.createElement('div');
             card.className = "group relative bg-slate-900/40 border border-white/5 rounded-[2rem] overflow-hidden hover:border-amber-500/30 transition-all duration-500 flex flex-col h-full shadow-xl";
             card.innerHTML = `
@@ -143,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex justify-between items-center mt-auto pt-4 border-t border-white/5">
             <div class="flex items-center gap-3">
             <span class="text-slate-500 text-[10px] tracking-wider">${post.date}</span>
-            <button data-like-id="${post.id}" class="like-btn-card ${likeBtnClass} hover:text-emerald-500 transition-colors text-xs flex items-center gap-1">
+            <button data-like-id="${post.id}" class="like-btn-card text-slate-400 hover:text-emerald-500 transition-colors text-xs flex items-center gap-1">
             <i class="fas fa-thumbs-up"></i> <span>${post.likes || 0}</span>
             </button>
             </div>
@@ -283,35 +279,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Логіка кліку по лайку на самій картці
             const likeBtnCard = e.target.closest('.like-btn-card');
             if (likeBtnCard) {
-                e.preventDefault();
-                e.stopPropagation();
                 if (!currentUser) return alert("Будь ласка, увійдіть, щоб ставити лайки!");
+                if (likeBtnCard.classList.contains('liked')) return;
 
-                const postId = likeBtnCard.dataset.likeId;
-                const post = postsData.find(p => p.id === postId);
-                if (!post) return;
+                const span = likeBtnCard.querySelector('span');
+                let currentLikes = parseInt(span.innerText) || 0;
 
-                if (!post.voters) post.voters = {};
-                const currentVote = post.voters[currentUser.email];
-
-                if (currentVote === 'like') {
-                    post.likes = Math.max(0, (post.likes || 1) - 1);
-                    delete post.voters[currentUser.email];
-                } else {
-                    if (currentVote === 'dislike') post.dislikes = Math.max(0, (post.dislikes || 1) - 1);
-                    post.likes = (post.likes || 0) + 1;
-                    post.voters[currentUser.email] = 'like';
-                }
-
-                renderPosts();
+                likeBtnCard.classList.add('liked');
+                likeBtnCard.classList.replace('text-slate-400', 'text-emerald-500');
+                span.innerText = currentLikes + 1;
 
                 fetch(SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ type: 'toggle_like', id: postId, userEmail: currentUser.email })
+                    body: JSON.stringify({ type: 'toggle_like', id: likeBtnCard.dataset.likeId, userEmail: currentUser.email })
                 });
             }
         });
@@ -322,25 +305,20 @@ document.addEventListener('DOMContentLoaded', () => {
         modalLikeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (!currentUser) return alert("Будь ласка, увійдіть, щоб ставити лайки!");
+            if (modalLikeBtn.classList.contains('liked')) return;
 
             const postId = modalLikeBtn.dataset.postId;
-            const post = postsData.find(p => p.id === postId);
-            if (!post) return;
+            let currentLikes = parseInt(modalLikesCount.innerText) || 0;
 
-            if (!post.voters) post.voters = {};
-            const currentVote = post.voters[currentUser.email];
+            modalLikeBtn.classList.add('liked');
+            modalLikeBtn.classList.replace('text-slate-400', 'text-emerald-400');
+            modalLikeBtn.classList.replace('border-white/5', 'border-emerald-500/30');
+            modalLikesCount.innerText = currentLikes + 1;
 
-            if (currentVote === 'like') {
-                post.likes = Math.max(0, (post.likes || 1) - 1);
-                delete post.voters[currentUser.email];
-            } else {
-                if (currentVote === 'dislike') post.dislikes = Math.max(0, (post.dislikes || 1) - 1);
-                post.likes = (post.likes || 0) + 1;
-                post.voters[currentUser.email] = 'like';
-            }
-
-            openViewModal(postId);
-            renderPosts();
+            const cardLikeSpan = document.querySelector(`.like-btn-card[data-like-id="${postId}"] span`);
+            if(cardLikeSpan) cardLikeSpan.innerText = currentLikes + 1;
+            const cardLikeBtn = document.querySelector(`.like-btn-card[data-like-id="${postId}"]`);
+            if(cardLikeBtn) cardLikeBtn.classList.replace('text-slate-400', 'text-emerald-500');
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -354,25 +332,15 @@ document.addEventListener('DOMContentLoaded', () => {
         modalDislikeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (!currentUser) return alert("Будь ласка, увійдіть, щоб ставити дизлайки!");
+            if (modalDislikeBtn.classList.contains('disliked')) return;
 
             const postId = modalDislikeBtn.dataset.postId;
-            const post = postsData.find(p => p.id === postId);
-            if (!post) return;
+            let currentDislikes = parseInt(modalDislikesCount.innerText) || 0;
 
-            if (!post.voters) post.voters = {};
-            const currentVote = post.voters[currentUser.email];
-
-            if (currentVote === 'dislike') {
-                post.dislikes = Math.max(0, (post.dislikes || 1) - 1);
-                delete post.voters[currentUser.email];
-            } else {
-                if (currentVote === 'like') post.likes = Math.max(0, (post.likes || 1) - 1);
-                post.dislikes = (post.dislikes || 0) + 1;
-                post.voters[currentUser.email] = 'dislike';
-            }
-
-            openViewModal(postId);
-            renderPosts();
+            modalDislikeBtn.classList.add('disliked');
+            modalDislikeBtn.classList.replace('text-slate-400', 'text-rose-400');
+            modalDislikeBtn.classList.replace('border-white/5', 'border-rose-500/30');
+            modalDislikesCount.innerText = currentDislikes + 1;
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -394,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const post = postsData.find(p => p.id === postId);
                     if (post && post.comments) {
                         post.comments.splice(commentIndex, 1);
-                        openViewModal(postId);
+                        openViewModal(postId); // Одразу перемальовуємо модалку
                     }
 
                     fetch(SCRIPT_URL, {
@@ -406,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             commentIndex: commentIndex,
                             adminEmail: currentUser.email
                         })
-                    }).then(() => fetchPosts());
+                    }).then(() => fetchPosts()); // Оновлюємо базу на фоні
                 }
             }
         });
@@ -436,27 +404,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const contentEl = document.getElementById('view-post-content');
         if(contentEl) contentEl.innerText = post.content;
 
-        const userVote = (currentUser && post.voters && post.voters[currentUser.email]) ? post.voters[currentUser.email] : null;
-
         if(modalLikeBtn) {
             modalLikeBtn.dataset.postId = id;
-            modalLikeBtn.classList.remove('text-emerald-400', 'border-emerald-500/30', 'liked', 'text-slate-400', 'border-white/5');
-            if (userVote === 'like') {
-                modalLikeBtn.classList.add('text-emerald-400', 'border-emerald-500/30', 'liked');
-            } else {
-                modalLikeBtn.classList.add('text-slate-400', 'border-white/5');
-            }
+            modalLikeBtn.classList.remove('text-emerald-400', 'border-emerald-500/30', 'liked');
+            modalLikeBtn.classList.add('text-slate-400', 'border-white/5');
         }
         if(modalLikesCount) modalLikesCount.innerText = post.likes || 0;
 
         if(modalDislikeBtn) {
             modalDislikeBtn.dataset.postId = id;
-            modalDislikeBtn.classList.remove('text-rose-400', 'border-rose-500/30', 'disliked', 'text-slate-400', 'border-white/5');
-            if (userVote === 'dislike') {
-                modalDislikeBtn.classList.add('text-rose-400', 'border-rose-500/30', 'disliked');
-            } else {
-                modalDislikeBtn.classList.add('text-slate-400', 'border-white/5');
-            }
+            modalDislikeBtn.classList.remove('text-rose-400', 'border-rose-500/30', 'disliked');
+            modalDislikeBtn.classList.add('text-slate-400', 'border-white/5');
         }
         if(modalDislikesCount) modalDislikesCount.innerText = post.dislikes || 0;
 
