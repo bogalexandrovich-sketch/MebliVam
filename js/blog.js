@@ -14,18 +14,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingIndicator = document.getElementById('blog-loading');
     const emptyState = document.getElementById('blog-empty');
 
+    // Адмін модалка
     const adminModal = document.getElementById('admin-post-modal');
     const adminForm = document.getElementById('admin-post-form');
     const closeAdminBtn = document.getElementById('close-admin-modal-btn');
     const imageInput = document.getElementById('post-image-input');
     const imageLabel = document.getElementById('post-image-label');
 
+    // Модалка перегляду
     const viewModal = document.getElementById('full-post-modal');
     const closeViewBtn = document.getElementById('close-view-modal-btn');
     const commentsList = document.getElementById('blog-comments-list');
     const commentsCount = document.getElementById('comments-count');
 
-    // Елементи лайків/дизлайків у модалці
+    // Елементи лайків у модалці
     const modalLikeBtn = document.getElementById('like-btn');
     const modalLikesCount = document.getElementById('likes-count');
     const modalDislikeBtn = document.getElementById('dislike-btn');
@@ -37,14 +39,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendCommentBtn = document.getElementById('send-comment-btn');
     const commentAuthTip = document.getElementById('comment-auth-tip');
 
-    // --- 1. АВТОРИЗАЦІЯ ---
+    // --- 1. АВТОРИЗАЦІЯ (Тільки перевірка прав) ---
     function checkAuth() {
         const savedData = localStorage.getItem('currentUserData');
         if (savedData) {
             currentUser = JSON.parse(savedData);
+
             if (currentUser.email === ADMIN_EMAIL) {
                 if(adminCreateBtn) adminCreateBtn.classList.remove('hidden');
             }
+
             if(commentInput && sendCommentBtn && commentAuthTip) {
                 commentInput.disabled = false;
                 sendCommentBtn.disabled = false;
@@ -64,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setTimeout(checkAuth, 1000);
 
-    // --- 2. ЗАВАНТАЖЕННЯ ПОСТІВ ---
+    // --- 2. ЗАВАНТАЖЕННЯ ПОСТІВ З GOOGLE SCRIPT ---
     function fetchPosts() {
         if(loadingIndicator) loadingIndicator.classList.remove('hidden');
         if(postsContainer) postsContainer.classList.add('hidden');
@@ -112,7 +116,13 @@ document.addEventListener('DOMContentLoaded', () => {
         postsContainer.classList.remove('hidden');
         if(emptyState) emptyState.classList.add('hidden');
 
-        const categoryNames = { 'tips': '💡 Поради експерта', 'cases': '🛠 Наш досвід', 'trends': '🎨 Тренди', 'materials': '🔩 Матеріали' };
+        const categoryNames = {
+            'tips': '💡 Поради експерта',
+            'cases': '🛠 Наш досвід',
+            'trends': '🎨 Тренди',
+            'materials': '🔩 Матеріали',
+            'moments': '🤭 Робочі моменти'
+        };
 
         filtered.forEach(post => {
             const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
@@ -124,6 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ` : '';
 
             const imgUrl = post.imageUrl || 'assets/images/logo-meblivam.png';
+
+            const userVote = (currentUser && post.voters && post.voters[currentUser.email]) ? post.voters[currentUser.email] : null;
+            const likeBtnClass = userVote === 'like' ? 'text-rose-500 liked' : 'text-slate-400';
 
             const card = document.createElement('div');
             card.className = "group relative bg-slate-900/40 border border-white/5 rounded-[2rem] overflow-hidden hover:border-amber-500/30 transition-all duration-500 flex flex-col h-full shadow-xl";
@@ -139,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex justify-between items-center mt-auto pt-4 border-t border-white/5">
             <div class="flex items-center gap-3">
             <span class="text-slate-500 text-[10px] tracking-wider">${post.date}</span>
-            <button data-like-id="${post.id}" class="like-btn-card text-slate-400 hover:text-emerald-500 transition-colors text-xs flex items-center gap-1">
-            <i class="fas fa-thumbs-up"></i> <span>${post.likes || 0}</span>
+            <button data-like-id="${post.id}" class="like-btn-card ${likeBtnClass} hover:text-rose-500 transition-colors text-xs flex items-center gap-1">
+            <i class="fas fa-heart"></i> <span>${post.likes || 0}</span>
             </button>
             </div>
             <button data-view-id="${post.id}" class="view-post-btn text-amber-500 text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-2">
@@ -205,6 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             const file = imageInput.files[0];
+
             const payload = {
                 type: "save_post",
                 id: document.getElementById('edit-post-id').value || Date.now().toString(),
@@ -225,10 +239,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(data => {
                     if (data.result === 'error') {
                         alert("Помилка від сервера: " + data.message);
+                        submitBtn.innerText = "Опублікувати";
+                        submitBtn.disabled = false;
                     } else {
+                        alert("Публікацію успішно збережено!");
                         adminModal.classList.add('hidden');
+                        submitBtn.innerText = "Опублікувати";
+                        submitBtn.disabled = false;
                         fetchPosts();
                     }
+                })
+                .catch(err => {
+                    alert("Сталася помилка мережі!");
                     submitBtn.innerText = "Опублікувати";
                     submitBtn.disabled = false;
                 });
@@ -248,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. ДЕЛЕГУВАННЯ ПОДІЙ ---
+    // --- 7. ДЕЛЕГУВАННЯ ПОДІЙ (ПЕРЕГЛЯД, РЕДАГУВАННЯ, ВИДАЛЕННЯ, ЛАЙКИ НА КАРТКАХ) ---
     if(postsContainer) {
         postsContainer.addEventListener('click', (e) => {
             const viewBtn = e.target.closest('.view-post-btn');
@@ -281,44 +303,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const likeBtnCard = e.target.closest('.like-btn-card');
             if (likeBtnCard) {
+                e.preventDefault();
+                e.stopPropagation();
                 if (!currentUser) return alert("Будь ласка, увійдіть, щоб ставити лайки!");
-                if (likeBtnCard.classList.contains('liked')) return;
 
-                const span = likeBtnCard.querySelector('span');
-                let currentLikes = parseInt(span.innerText) || 0;
+                const postId = likeBtnCard.dataset.likeId;
+                const post = postsData.find(p => p.id === postId);
+                if (!post) return;
 
-                likeBtnCard.classList.add('liked');
-                likeBtnCard.classList.replace('text-slate-400', 'text-emerald-500');
-                span.innerText = currentLikes + 1;
+                if (!post.voters) post.voters = {};
+                const currentVote = post.voters[currentUser.email];
+
+                if (currentVote === 'like') {
+                    post.likes = Math.max(0, (post.likes || 1) - 1);
+                    delete post.voters[currentUser.email];
+                } else {
+                    if (currentVote === 'dislike') post.dislikes = Math.max(0, (post.dislikes || 1) - 1);
+                    post.likes = (post.likes || 0) + 1;
+                    post.voters[currentUser.email] = 'like';
+                }
+
+                renderPosts();
 
                 fetch(SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ type: 'toggle_like', id: likeBtnCard.dataset.likeId, userEmail: currentUser.email })
+                    body: JSON.stringify({ type: 'toggle_like', id: postId, userEmail: currentUser.email })
                 });
             }
         });
     }
 
-    // --- ОБРОБКА ЛАЙКА ТА ДИЗЛАЙКА В МОДАЛЦІ ---
+    // --- ОБРОБКА ЛАЙКА В МОДАЛЦІ ---
     if(modalLikeBtn) {
         modalLikeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (!currentUser) return alert("Будь ласка, увійдіть, щоб ставити лайки!");
-            if (modalLikeBtn.classList.contains('liked')) return;
 
             const postId = modalLikeBtn.dataset.postId;
-            let currentLikes = parseInt(modalLikesCount.innerText) || 0;
+            const post = postsData.find(p => p.id === postId);
+            if (!post) return;
 
-            modalLikeBtn.classList.add('liked');
-            modalLikeBtn.classList.replace('text-slate-400', 'text-emerald-400');
-            modalLikeBtn.classList.replace('border-white/5', 'border-emerald-500/30');
-            modalLikesCount.innerText = currentLikes + 1;
+            if (!post.voters) post.voters = {};
+            const currentVote = post.voters[currentUser.email];
 
-            const cardLikeSpan = document.querySelector(`.like-btn-card[data-like-id="${postId}"] span`);
-            if(cardLikeSpan) cardLikeSpan.innerText = currentLikes + 1;
-            const cardLikeBtn = document.querySelector(`.like-btn-card[data-like-id="${postId}"]`);
-            if(cardLikeBtn) cardLikeBtn.classList.replace('text-slate-400', 'text-emerald-500');
+            if (currentVote === 'like') {
+                post.likes = Math.max(0, (post.likes || 1) - 1);
+                delete post.voters[currentUser.email];
+            } else {
+                if (currentVote === 'dislike') post.dislikes = Math.max(0, (post.dislikes || 1) - 1);
+                post.likes = (post.likes || 0) + 1;
+                post.voters[currentUser.email] = 'like';
+            }
+
+            openViewModal(postId);
+            renderPosts();
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -328,19 +367,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- ОБРОБКА ДИЗЛАЙКА В МОДАЛЦІ ---
     if(modalDislikeBtn) {
         modalDislikeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             if (!currentUser) return alert("Будь ласка, увійдіть, щоб ставити дизлайки!");
-            if (modalDislikeBtn.classList.contains('disliked')) return;
 
             const postId = modalDislikeBtn.dataset.postId;
-            let currentDislikes = parseInt(modalDislikesCount.innerText) || 0;
+            const post = postsData.find(p => p.id === postId);
+            if (!post) return;
 
-            modalDislikeBtn.classList.add('disliked');
-            modalDislikeBtn.classList.replace('text-slate-400', 'text-rose-400');
-            modalDislikeBtn.classList.replace('border-white/5', 'border-rose-500/30');
-            modalDislikesCount.innerText = currentDislikes + 1;
+            if (!post.voters) post.voters = {};
+            const currentVote = post.voters[currentUser.email];
+
+            if (currentVote === 'dislike') {
+                post.dislikes = Math.max(0, (post.dislikes || 1) - 1);
+                delete post.voters[currentUser.email];
+            } else {
+                if (currentVote === 'like') post.likes = Math.max(0, (post.likes || 1) - 1);
+                post.dislikes = (post.dislikes || 0) + 1;
+                post.voters[currentUser.email] = 'dislike';
+            }
+
+            openViewModal(postId);
+            renderPosts();
 
             fetch(SCRIPT_URL, {
                 method: 'POST',
@@ -362,7 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const post = postsData.find(p => p.id === postId);
                     if (post && post.comments) {
                         post.comments.splice(commentIndex, 1);
-                        openViewModal(postId); // Одразу перемальовуємо модалку
+                        openViewModal(postId);
+                        renderPosts();
                     }
 
                     fetch(SCRIPT_URL, {
@@ -374,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             commentIndex: commentIndex,
                             adminEmail: currentUser.email
                         })
-                    }).then(() => fetchPosts()); // Оновлюємо базу на фоні
+                    }).then(() => fetchPosts());
                 }
             }
         });
@@ -390,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const imgEl = document.getElementById('view-post-image');
         if(imgEl) imgEl.src = post.imageUrl || 'assets/images/logo-meblivam.png';
 
-        const categoryNames = { 'tips': '💡 Поради', 'cases': '🛠 Досвід', 'trends': '🎨 Тренди', 'materials': '🔩 Матеріали' };
+        const categoryNames = { 'tips': '💡 Поради', 'cases': '🛠 Досвід', 'trends': '🎨 Тренди', 'materials': '🔩 Матеріали', 'moments': '🤭 Робочі моменти' };
 
         const catEl = document.getElementById('view-post-category');
         if(catEl) catEl.innerText = categoryNames[post.category] || post.category;
@@ -404,23 +455,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const contentEl = document.getElementById('view-post-content');
         if(contentEl) contentEl.innerText = post.content;
 
+        const userVote = (currentUser && post.voters && post.voters[currentUser.email]) ? post.voters[currentUser.email] : null;
+
         if(modalLikeBtn) {
             modalLikeBtn.dataset.postId = id;
-            modalLikeBtn.classList.remove('text-emerald-400', 'border-emerald-500/30', 'liked');
-            modalLikeBtn.classList.add('text-slate-400', 'border-white/5');
+            if (userVote === 'like') {
+                modalLikeBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-xl transition-all group border border-emerald-500/30 text-emerald-400 liked';
+            } else {
+                modalLikeBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-xl transition-all group border border-white/5 text-slate-400 hover:border-emerald-500/30 hover:text-emerald-400';
+            }
         }
         if(modalLikesCount) modalLikesCount.innerText = post.likes || 0;
 
         if(modalDislikeBtn) {
             modalDislikeBtn.dataset.postId = id;
-            modalDislikeBtn.classList.remove('text-rose-400', 'border-rose-500/30', 'disliked');
-            modalDislikeBtn.classList.add('text-slate-400', 'border-white/5');
+            if (userVote === 'dislike') {
+                modalDislikeBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-xl transition-all group border border-rose-500/30 text-rose-400 disliked';
+            } else {
+                modalDislikeBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-xl transition-all group border border-white/5 text-slate-400 hover:border-rose-500/30 hover:text-rose-400';
+            }
         }
         if(modalDislikesCount) modalDislikesCount.innerText = post.dislikes || 0;
 
-        // Рендер коментарів
+        // Рендер коментарів (З КНОПКОЮ ВИДАЛЕННЯ ДЛЯ АДМІНА)
         const comments = post.comments || [];
-        if (commentsCount) commentsCount.innerText = comments.length;
+
+        if (commentsCount) {
+            commentsCount.innerText = comments.length;
+        }
 
         if (commentsList) {
             commentsList.innerHTML = '';
@@ -431,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 comments.forEach((c, index) => {
                     const authorName = c.author || "Анонім";
-                    const deleteHtml = isAdmin ? `<button data-post-id="${id}" data-comment-index="${index}" class="delete-comment-btn text-rose-500 hover:text-rose-400 text-[10px] uppercase tracking-wider flex items-center gap-1 transition-colors"><i class="fas fa-trash"></i> Видалити</button>` : '';
+                    const deleteHtml = isAdmin ? `<button data-post-id="${id}" data-comment-index="${index}" class="delete-comment-btn text-rose-500 hover:text-rose-400 text-[10px] uppercase tracking-wider flex items-center gap-1 transition-colors ml-auto"><i class="fas fa-trash"></i> Видалити</button>` : '';
 
                     commentsList.innerHTML += `
                     <div class="bg-slate-950/60 p-4 rounded-xl border border-white/5 mb-3">
@@ -506,6 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ІНІЦІАЛІЗАЦІЯ
     checkAuth();
     fetchPosts();
 });
