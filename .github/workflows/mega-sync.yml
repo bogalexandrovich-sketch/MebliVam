@@ -31,5 +31,20 @@ jobs:
           
           # Копіюємо всі файли з репозиторію в цю папку на MEGA
           megacopy --local ./ --remote /Root/MebliVam_Backup --no-progress
-# Копіюємо всі файли з репозиторію в цю папку на MEGA
+- name: Configure and Sync to MEGA
+        run: |
+          # Створюємо файл конфігурації
+          cat << EOF > ~/.megarc
+          [Login]
+          Username = ${{ secrets.MEGA_EMAIL }}
+          Password = ${{ secrets.MEGA_PASSWORD }}
+          EOF
+          
+          # 1. ОЧИЩЕННЯ: Видаляємо стару папку з MEGA
+          megarm /Root/MebliVam_Backup || true
+          
+          # 2. Створюємо чисту папку
+          megamkdir /Root/MebliVam_Backup || true
+          
+          # 3. Заливаємо найновіший код сайту
           megacopy --local ./ --remote /Root/MebliVam_Backup --no-progress || true
