@@ -144,6 +144,70 @@
 
         <div id="dynamic-portfolio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
         </div>
+
+        <section class="py-20 relative overflow-hidden">
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+
+        <div class="mb-12">
+            <h2 class="text-white text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none mb-4">
+                Відповіді на <span class="text-amber-500">запитання</span>
+            </h2>
+            <div class="w-20 h-1.5 bg-amber-500"></div>
+        </div>
+
+        <div class="space-y-4">
+
+            <div class="faq-item group">
+                <button class="faq-trigger w-full flex items-center justify-between p-6 bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300 text-left">
+                    <span class="text-white font-bold text-lg pr-8">Скільки коштує виїзд замірника та створення проєкту?</span>
+                    <span class="text-amber-500 transition-transform duration-300 icon-plus"><i class="fas fa-plus"></i></span>
+                </button>
+                <div class="faq-content overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                    <div class="p-6 text-slate-400 font-light leading-relaxed border-x border-b border-white/5 rounded-b-2xl -mt-4 bg-slate-900/20">
+                        Виїзд майстра-замірника по Києву безкоштовний за умови подальшого замовлення. Це включає професійний замір приміщення, консультацію щодо матеріалів та створення детального 3D-проєкту вашої майбутньої кухні чи шафи.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item group">
+                <button class="faq-trigger w-full flex items-center justify-between p-6 bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300 text-left">
+                    <span class="text-white font-bold text-lg pr-8">Які реальні терміни виготовлення меблів?</span>
+                    <span class="text-amber-500 transition-transform duration-300 icon-plus"><i class="fas fa-plus"></i></span>
+                </button>
+                <div class="faq-content overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                    <div class="p-6 text-slate-400 font-light leading-relaxed border-x border-b border-white/5 rounded-b-2xl -mt-4 bg-slate-900/20">
+                        Стандартний термін виготовлення складає від 14 до 45 робочих днів. Це залежить від складності конструкції та обраних матеріалів (наприклад, фарбовані фасади чи стільниці з каменю потребують більше часу для технологічної обробки).
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item group">
+                <button class="faq-trigger w-full flex items-center justify-between p-6 bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300 text-left">
+                    <span class="text-white font-bold text-lg pr-8">Чи надаєте ви офіційну гарантію на вироби?</span>
+                    <span class="text-amber-500 transition-transform duration-300 icon-plus"><i class="fas fa-plus"></i></span>
+                </button>
+                <div class="faq-content overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                    <div class="p-6 text-slate-400 font-light leading-relaxed border-x border-b border-white/5 rounded-b-2xl -mt-4 bg-slate-900/20">
+                        Так, ми надаємо офіційну гарантію терміном 24 місяців на корпуси та до 5 років на фурнітуру провідних брендів (Blum, Hettich). Після монтажу ви отримуєте акт виконаних робіт, який є вашим гарантійним талоном.
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item group">
+                <button class="faq-trigger w-full flex items-center justify-between p-6 bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl hover:border-amber-500/30 transition-all duration-300 text-left">
+                    <span class="text-white font-bold text-lg pr-8">Чи можна замовити меблі за моїм ескізом чи фото з Pinterest?</span>
+                    <span class="text-amber-500 transition-transform duration-300 icon-plus"><i class="fas fa-plus"></i></span>
+                </button>
+                <div class="faq-content overflow-hidden max-h-0 transition-all duration-500 ease-in-out">
+                    <div class="p-6 text-slate-400 font-light leading-relaxed border-x border-b border-white/5 rounded-b-2xl -mt-4 bg-slate-900/20">
+                        Безумовно! Наші технологи допоможуть адаптувати будь-яку візуальну ідею під реальні технічні вимоги та ваш бюджет, зберігаючи естетику, яка вам сподобалася.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
     </main>
 
     <footer class="p-10 text-center text-slate-600 text-[10px] uppercase tracking-[0.4em] opacity-50 border-t border-white/5">
@@ -241,6 +305,35 @@
                 return Math.round(area * avgMaterialPrice * coefficient);
             };
             // ----------------------
+
+            // --- ЛОГІКА FAQ (АКОРДЕОН) ---
+            const faqTriggers = document.querySelectorAll('.faq-trigger');
+
+            faqTriggers.forEach(trigger => {
+                trigger.addEventListener('click', () => {
+                    const content = trigger.nextElementSibling;
+                    const icon = trigger.querySelector('.icon-plus');
+
+                    // Закриваємо інші відкриті пункти
+                    document.querySelectorAll('.faq-content').forEach(otherContent => {
+                        if (otherContent !== content) {
+                            otherContent.style.maxHeight = null;
+                            const otherIcon = otherContent.previousElementSibling.querySelector('.icon-plus');
+                            if(otherIcon) otherIcon.style.transform = 'rotate(0deg)';
+                        }
+                    });
+
+                    // Відкриваємо/закриваємо поточний пункт
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        if(icon) icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        if(icon) icon.style.transform = 'rotate(45deg)';
+                    }
+                });
+            });
+            // -----------------------------
         });
     </script>
 
