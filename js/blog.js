@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- НАЛАШТУВАННЯ ---
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec';
     const ADMIN_EMAIL = 'alphacentavr.2012@gmail.com';
-    const EDITOR_EMAIL = 'dovgopol2703@gmail.com'; // Додано пошту редактора
+    const EDITOR_EMAIL = 'dovgopol2703@gmail.com';
 
     // --- СТАН ---
     let currentUser = null;
@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (savedData) {
             currentUser = JSON.parse(savedData);
 
-            // Кнопку "Нова публікація" бачить і адмін, і редактор
             if (currentUser.email === ADMIN_EMAIL || currentUser.email === EDITOR_EMAIL) {
                 if(adminCreateBtn) adminCreateBtn.classList.remove('hidden');
             }
@@ -92,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         })
         .catch(err => {
-            console.error("Помилка завантаження постів:", err);
+            console.error("Помилка завантаженняポストів:", err);
             if(loadingIndicator) loadingIndicator.classList.add('hidden');
             if(emptyState) {
                 emptyState.classList.remove('hidden');
@@ -123,11 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
             'cases': '🛠 Наш досвід',
             'trends': '🎨 Тренди',
             'materials': '🔩 Матеріали',
-            'moments': '🤭 Робочі моменти'
+            'moments': '🤭 Робочі моменти',
+            'design': '📐 Дизайнерські рішення' // Додано сюди
         };
 
         filtered.forEach(post => {
-            // Кнопки видалення/редагування бачить ТІЛЬКИ головний адмін
             const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
             const adminButtons = isAdmin ? `
             <div class="absolute top-4 right-4 flex gap-2 z-10">
@@ -213,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(adminForm) {
         adminForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            // Перевіряємо, чи це Адмін АБО Редактор
             if (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.email !== EDITOR_EMAIL)) {
                 alert("Помилка прав доступу!");
                 return;
@@ -459,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const imgEl = document.getElementById('view-post-image');
         if(imgEl) imgEl.src = post.imageUrl || 'assets/images/logo-meblivam.png';
 
-        const categoryNames = { 'tips': '💡 Поради', 'cases': '🛠 Досвід', 'trends': '🎨 Тренди', 'materials': '🔩 Матеріали', 'moments': '🤭 Робочі моменти' };
+        const categoryNames = { 'tips': '💡 Поради', 'cases': '🛠 Досвід', 'trends': '🎨 Тренди', 'materials': '🔩 Матеріали', 'moments': '🤭 Робочі моменти', 'design': '📐 Дизайнерські рішення' }; // Додано сюди
 
         const catEl = document.getElementById('view-post-category');
         if(catEl) catEl.innerText = categoryNames[post.category] || post.category;
@@ -495,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if(modalDislikesCount) modalDislikesCount.innerText = post.dislikes || 0;
 
-        // Рендер коментарів (З КНОПКОЮ ВИДАЛЕННЯ ТІЛЬКИ ДЛЯ ГОЛОВНОГО АДМІНА)
+        // Рендер коментарів
         const comments = post.comments || [];
 
         if (commentsCount) {
