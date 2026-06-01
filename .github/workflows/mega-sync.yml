@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Megatools
         run: |
@@ -21,7 +21,7 @@ jobs:
         run: |
           # Створюємо файл конфігурації з твоїми секретними даними
           cat << EOF > ~/.megarc
-          [0]
+          [Login]
           Username = ${{ secrets.MEGA_EMAIL }}
           Password = ${{ secrets.MEGA_PASSWORD }}
           EOF
