@@ -31,3 +31,5 @@ jobs:
           
           # Копіюємо всі файли з репозиторію в цю папку на MEGA
           megacopy --local ./ --remote /Root/MebliVam_Backup --no-progress
+# Копіюємо всі файли з репозиторію в цю папку на MEGA
+          megacopy --local ./ --remote /Root/MebliVam_Backup --no-progress || true
