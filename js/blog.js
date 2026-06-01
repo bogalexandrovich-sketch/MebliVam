@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- НАЛАШТУВАННЯ ---
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPA9DNIUfzVXmaf6AeCXQiSfllENLXGojQgOvXeJbkhQGF2nR3XBs5kr9qT9aD2aPh/exec';
     const ADMIN_EMAIL = 'alphacentavr.2012@gmail.com';
+    const EDITOR_EMAIL = 'dovgopol2703@gmail.com'; // Додано пошту редактора
 
     // --- СТАН ---
     let currentUser = null;
@@ -45,7 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (savedData) {
             currentUser = JSON.parse(savedData);
 
-            if (currentUser.email === ADMIN_EMAIL) {
+            // Кнопку "Нова публікація" бачить і адмін, і редактор
+            if (currentUser.email === ADMIN_EMAIL || currentUser.email === EDITOR_EMAIL) {
                 if(adminCreateBtn) adminCreateBtn.classList.remove('hidden');
             }
 
@@ -125,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         filtered.forEach(post => {
+            // Кнопки видалення/редагування бачить ТІЛЬКИ головний адмін
             const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
             const adminButtons = isAdmin ? `
             <div class="absolute top-4 right-4 flex gap-2 z-10">
@@ -139,9 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const likeBtnClass = userVote === 'like' ? 'text-rose-500 liked' : 'text-slate-400';
 
             const card = document.createElement('div');
-            // Додано класи blog-post-card та cursor-pointer для клікабельності всієї картки
             card.className = "blog-post-card cursor-pointer group relative bg-slate-900/40 border border-white/5 rounded-[2rem] overflow-hidden hover:border-amber-500/30 transition-all duration-500 flex flex-col h-full shadow-xl";
-            card.dataset.postId = post.id; // Додаємо ID безпосередньо в контейнер картки
+            card.dataset.postId = post.id;
 
             card.innerHTML = `
             ${adminButtons}
@@ -211,7 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(adminForm) {
         adminForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+            // Перевіряємо, чи це Адмін АБО Редактор
+            if (!currentUser || (currentUser.email !== ADMIN_EMAIL && currentUser.email !== EDITOR_EMAIL)) {
                 alert("Помилка прав доступу!");
                 return;
             }
@@ -276,11 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 7. ДЕЛЕГУВАННЯ ПОДІЙ (ПЕРЕГЛЯД, РЕДАГУВАННЯ, ВИДАЛЕННЯ, ЛАЙКИ) ---
     if(postsContainer) {
         postsContainer.addEventListener('click', (e) => {
-            // Перевіряємо кліки по специфічних кнопках спочатку
             const editBtn = e.target.closest('.edit-post-btn');
             if (editBtn) {
                 e.preventDefault();
-                e.stopPropagation(); // Зупиняємо подію, щоб не відкрилась стаття
+                e.stopPropagation();
                 const post = postsData.find(p => p.id === editBtn.dataset.editId);
                 if (post) {
                     document.getElementById('edit-post-id').value = post.id;
@@ -340,9 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Якщо клік був НЕ по лайку і НЕ по кнопках адміна, тоді відкриваємо статтю
             const blogCard = e.target.closest('.blog-post-card');
-            const viewBtn = e.target.closest('.view-post-btn'); // Про всяк випадок залишаємо і це
+            const viewBtn = e.target.closest('.view-post-btn');
 
             if (blogCard || viewBtn) {
                 const id = blogCard ? blogCard.dataset.postId : viewBtn.dataset.viewId;
@@ -494,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if(modalDislikesCount) modalDislikesCount.innerText = post.dislikes || 0;
 
-        // Рендер коментарів (З КНОПКОЮ ВИДАЛЕННЯ ДЛЯ АДМІНА)
+        // Рендер коментарів (З КНОПКОЮ ВИДАЛЕННЯ ТІЛЬКИ ДЛЯ ГОЛОВНОГО АДМІНА)
         const comments = post.comments || [];
 
         if (commentsCount) {
