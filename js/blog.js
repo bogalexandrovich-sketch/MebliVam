@@ -139,7 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const likeBtnClass = userVote === 'like' ? 'text-rose-500 liked' : 'text-slate-400';
 
             const card = document.createElement('div');
-            card.className = "group relative bg-slate-900/40 border border-white/5 rounded-[2rem] overflow-hidden hover:border-amber-500/30 transition-all duration-500 flex flex-col h-full shadow-xl";
+            // Додано класи blog-post-card та cursor-pointer для клікабельності всієї картки
+            card.className = "blog-post-card cursor-pointer group relative bg-slate-900/40 border border-white/5 rounded-[2rem] overflow-hidden hover:border-amber-500/30 transition-all duration-500 flex flex-col h-full shadow-xl";
+            card.dataset.postId = post.id; // Додаємо ID безпосередньо в контейнер картки
+
             card.innerHTML = `
             ${adminButtons}
             <div class="h-48 overflow-hidden bg-slate-950 relative">
@@ -152,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex justify-between items-center mt-auto pt-4 border-t border-white/5">
             <div class="flex items-center gap-3">
             <span class="text-slate-500 text-[10px] tracking-wider">${post.date}</span>
-            <button data-like-id="${post.id}" class="like-btn-card ${likeBtnClass} hover:text-rose-500 transition-colors text-xs flex items-center gap-1">
+            <button data-like-id="${post.id}" class="like-btn-card ${likeBtnClass} hover:text-rose-500 transition-colors text-xs flex items-center gap-1 z-10 relative">
             <i class="fas fa-heart"></i> <span>${post.likes || 0}</span>
             </button>
             </div>
@@ -270,14 +273,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. ДЕЛЕГУВАННЯ ПОДІЙ (ПЕРЕГЛЯД, РЕДАГУВАННЯ, ВИДАЛЕННЯ, ЛАЙКИ НА КАРТКАХ) ---
+    // --- 7. ДЕЛЕГУВАННЯ ПОДІЙ (ПЕРЕГЛЯД, РЕДАГУВАННЯ, ВИДАЛЕННЯ, ЛАЙКИ) ---
     if(postsContainer) {
         postsContainer.addEventListener('click', (e) => {
-            const viewBtn = e.target.closest('.view-post-btn');
-            if (viewBtn) openViewModal(viewBtn.dataset.viewId);
-
+            // Перевіряємо кліки по специфічних кнопках спочатку
             const editBtn = e.target.closest('.edit-post-btn');
             if (editBtn) {
+                e.preventDefault();
+                e.stopPropagation(); // Зупиняємо подію, щоб не відкрилась стаття
                 const post = postsData.find(p => p.id === editBtn.dataset.editId);
                 if (post) {
                     document.getElementById('edit-post-id').value = post.id;
@@ -288,10 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('post-full-content').value = post.content;
                     adminModal.classList.remove('hidden');
                 }
+                return;
             }
 
             const delBtn = e.target.closest('.delete-post-btn');
             if (delBtn) {
+                e.preventDefault();
+                e.stopPropagation();
                 if(confirm("Точно видалити цю статтю?")) {
                     fetch(SCRIPT_URL, {
                         method: 'POST',
@@ -299,6 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ type: 'delete_post', id: delBtn.dataset.deleteId, adminEmail: currentUser.email })
                     }).then(() => fetchPosts());
                 }
+                return;
             }
 
             const likeBtnCard = e.target.closest('.like-btn-card');
@@ -330,6 +337,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ type: 'toggle_like', id: postId, userEmail: currentUser.email })
                 });
+                return;
+            }
+
+            // Якщо клік був НЕ по лайку і НЕ по кнопках адміна, тоді відкриваємо статтю
+            const blogCard = e.target.closest('.blog-post-card');
+            const viewBtn = e.target.closest('.view-post-btn'); // Про всяк випадок залишаємо і це
+
+            if (blogCard || viewBtn) {
+                const id = blogCard ? blogCard.dataset.postId : viewBtn.dataset.viewId;
+                openViewModal(id);
             }
         });
     }
