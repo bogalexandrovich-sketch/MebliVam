@@ -1,0 +1,33 @@
+name: Backup to MEGA
+
+on:
+  push:
+    branches:
+      - main # Якщо твоя головна гілка називається master, заміни main на master
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Megatools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y megatools
+
+      - name: Configure and Sync to MEGA
+        run: |
+          # Створюємо файл конфігурації з твоїми секретними даними
+          cat << EOF > ~/.megarc
+          [0]
+          Username = ${{ secrets.MEGA_EMAIL }}
+          Password = ${{ secrets.MEGA_PASSWORD }}
+          EOF
+          
+          # Створюємо папку на MEGA (якщо її немає, помилка ігнорується завдяки || true)
+          megamkdir /Root/MebliVam_Backup || true
+          
+          # Копіюємо всі файли з репозиторію в цю папку на MEGA
+          megacopy --local ./ --remote /Root/MebliVam_Backup --no-progress
